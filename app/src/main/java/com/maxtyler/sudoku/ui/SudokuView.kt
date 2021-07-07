@@ -11,7 +11,8 @@ import com.maxtyler.sudoku.ui.SudokuDrawState
 fun SudokuView(
     sudokuDrawState: SudokuDrawState,
     controlState: ControlState,
-    onCellPressed: (Pair<Int, Int>) -> Unit = {}
+    onCellPressed: (Pair<Int, Int>) -> Unit = {},
+    onElementToggled: (Pair<Int, Int>, Int) -> Unit = { _, _ -> Unit },
 ) {
     Column() {
         BoardView(
@@ -24,6 +25,9 @@ fun SudokuView(
                 is SudokuDrawState.SudokuState.Guess -> x.v
                 else -> setOf()
             }
-        } ?: setOf())
+        } ?: setOf(),
+            controlState.selected?.let {
+                { i -> onElementToggled(it, i) }
+            } ?: {})
     }
 }

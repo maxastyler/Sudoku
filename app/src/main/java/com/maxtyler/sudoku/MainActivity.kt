@@ -35,5 +35,10 @@ class MainActivity : ComponentActivity() {
 fun Main(sudokuViewModel: SudokuViewModel = viewModel()) {
     val sudoku by sudokuViewModel.puzzleView.collectAsState(initial = SudokuDrawState(Sudoku()))
     val controlState by sudokuViewModel.controlState.collectAsState()
-    SudokuView(sudoku, controlState, onCellPressed = { sudokuViewModel.toggleSquare(it) })
+    SudokuView(
+        sudoku,
+        controlState,
+        onCellPressed = { sudokuViewModel.toggleSquare(it) },
+        onElementToggled = sudokuViewModel::toggleElement
+    )
 }

@@ -1,6 +1,5 @@
 package com.maxtyler.sudoku.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.maxtyler.sudoku.model.Sudoku
@@ -45,8 +44,12 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
         _puzzle.value = puzzle
     }
 
+    fun toggleElement(coord: Pair<Int, Int>, element: Int) =
+        _puzzle.value.toggleElement(coord, element)?.let {
+            _puzzle.value = it
+        }
+
     fun toggleSquare(square: Pair<Int, Int>) {
-        Log.d("GAMES", "${square}")
         when {
             (square.first < 0) or (square.first > 8) or (square.second < 0) or (square.second > 8) -> Unit
             square in _puzzle.value.clues.keys -> Unit
