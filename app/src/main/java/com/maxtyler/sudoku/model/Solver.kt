@@ -1,13 +1,13 @@
 package com.maxtyler.sudoku.model
 
-import kotlin.random.Random
+import android.util.Log
 
 data class Solver(val board: Map<Pair<Int, Int>, String>) {
     constructor(sudoku: Sudoku) : this(board = (0..8).flatMap { row ->
         (0..8).map { col ->
-            (row to col) to sudoku.board.getOrDefault(
+            (row to col) to sudoku.clues.mapValues { (_, v) -> setOf(v) }.getOrDefault(
                 row to col,
-                (1..9).toSet()
+                sudoku.guesses.getOrDefault(row to col, (1..9).toSet())
             ).joinToString("")
         }
     }.toMap())
@@ -19,14 +19,23 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
         return search(map)
     }
 
-    fun findMinSolutions(): MutableMap<Pair<Int, Int>, String>? {
+    fun findMinSolutions(toRemove: Int): MutableMap<Pair<Int, Int>, String>? {
         val unset = (1..9).joinToString(separator = "")
         return solve()?.let { solution ->
             val tempSolution = solution.toMutableMap()
-            while (Solver.countSolutions(tempSolution) <= 1) {
-                val x = Random.nextInt(0, 8)
-                val y = Random.nextInt(0, 8)
-                tempSolution[Pair(x, y)] = unset
+            var removed = 0
+            while (removed < toRemove) {
+                Log.d("GAMES", "Removed: ${removed}")
+                when (val x =
+                    tempSolution.filterValues { it.length == 1 }.keys.shuffled().asSequence()
+                        .mapNotNull { coord ->
+                            if (countSolutions(tempSolution + (coord to unset)) == 1) coord
+                            else null
+                        }.firstOrNull()) {
+                    null -> break
+                    else -> tempSolution[x] = unset
+                }
+                removed += 1
             }
             tempSolution
         }
