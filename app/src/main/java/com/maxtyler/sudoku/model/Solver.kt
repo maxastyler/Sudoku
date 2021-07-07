@@ -25,14 +25,15 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
             val tempSolution = solution.toMutableMap()
             var removed = 0
             while (removed < toRemove) {
-                Log.d("GAMES", "Removed: ${removed}")
                 when (val x =
                     tempSolution.filterValues { it.length == 1 }.keys.shuffled().asSequence()
                         .mapNotNull { coord ->
                             if (countSolutions(tempSolution + (coord to unset)) == 1) coord
                             else null
                         }.firstOrNull()) {
-                    null -> break
+                    null -> {
+                        break
+                    }
                     else -> tempSolution[x] = unset
                 }
                 removed += 1

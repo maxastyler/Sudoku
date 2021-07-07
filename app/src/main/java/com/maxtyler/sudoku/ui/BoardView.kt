@@ -1,12 +1,12 @@
-package com.maxtyler.sudoku.ui.theme
+package com.maxtyler.sudoku.ui
 
 import android.graphics.Paint
 import android.graphics.Rect
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -16,41 +16,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-@Composable
-fun SudokuCell(elements: Set<Int>) {
-    Box(modifier = Modifier.size(30.dp), contentAlignment = Alignment.Center) {
-        when {
-            elements.size == 1 -> Text("${elements.first()}")
-            else -> Column(verticalArrangement = Arrangement.SpaceEvenly) {
-                (0..2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-                        (0..2).forEach { col ->
-                            val elem = row * 3 + col + 1
-                            Text(
-                                elem.toString(),
-                                color = if (elem in elements) Color.Black else Color.LightGray,
-                                fontSize = 3.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun SudokuCellPreview() {
-    Column() {
-        SudokuCell(setOf(1, 2, 3))
-        SudokuCell(setOf(9))
-    }
-}
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.toSize
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 private fun DrawScope.drawSudokuCell(cell: SudokuDrawState.SudokuState) {
     val paint = Paint()
@@ -128,8 +97,24 @@ private fun DrawScope.drawSudokuCell(cell: SudokuDrawState.SudokuState) {
 }
 
 @Composable
-fun SudokuView(sudokuDrawState: SudokuDrawState) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
+fun BoardView(
+    sudokuDrawState: SudokuDrawState,
+    controlState: ControlState,
+    onCellPressed: (Pair<Int, Int>) -> Unit = {}
+) {
+    Canvas(modifier = Modifier
+        .fillMaxWidth()
+        .aspectRatio(1f)
+        .pointerInput(Unit) {
+            detectTapGestures(onPress = { (x, y) ->
+                val squareSize = size.toSize().minDimension / 9
+                onCellPressed(
+                    Pair(
+                        floor(x / squareSize).roundToInt(), floor(y / squareSize).roundToInt()
+                    )
+                )
+            })
+        }) {
         val boardSize = size.minDimension
         val lineSpacing = boardSize / 9
         (0..9).forEach {
@@ -149,18 +134,17 @@ fun SudokuView(sudokuDrawState: SudokuDrawState) {
         }
 
         sudokuDrawState.values.forEach { (row, col), v ->
-            translate(left = col * lineSpacing, top = row * lineSpacing) {
+            translate(left = row * lineSpacing, top = col * lineSpacing) {
                 drawSudokuCell(v)
             }
         }
+        controlState.selected?.let { (x, y) ->
+            drawRect(
+                color = Color.Cyan,
+                topLeft = Offset(x * lineSpacing, y * lineSpacing),
+                size = Size(lineSpacing, lineSpacing),
+                style = Stroke(width = 10f)
+            )
+        }
     }
-//    Column() {
-//        (0..8).forEach { row ->
-//            Row() {
-//                (0..8).forEach { col ->
-//                    SudokuCell(sudoku.board.getOrDefault(Pair(row, col), (1..9).toSet()))
-//                }
-//            }
-//        }
-//    }
 }
