@@ -34,9 +34,11 @@ class PuzzleSaveTest {
     @Test
     fun testInsertionAndRetrieval() {
         val puzzle = PuzzleSave(clues = mapOf(), entries = mapOf(), guesses = mapOf())
-        puzzleDao.insertPuzzle(puzzle)
-        puzzleDao.insertPuzzle(puzzle)
-        puzzleDao.insertPuzzle(puzzle.copy(id = 1))
+        runBlocking {
+            puzzleDao.insertPuzzle(puzzle)
+            puzzleDao.insertPuzzle(puzzle)
+            puzzleDao.insertPuzzle(puzzle.copy(id = 1))
+        }
         assertEquals(runBlocking() {
             puzzleDao.getPuzzles().first().size
         }, 2)
@@ -46,7 +48,7 @@ class PuzzleSaveTest {
             entries = mapOf(1 to 2 to 3, 2 to 0 to 3),
             guesses = mapOf(2 to 3 to setOf(), 5 to 5 to setOf(2, 3, 4), 1 to 1 to setOf(1))
         )
-        puzzleDao.insertPuzzle(puzzle2)
+        runBlocking { puzzleDao.insertPuzzle(puzzle2) }
         assertEquals(puzzle2, runBlocking {
             puzzleDao.getPuzzle(1).first()
         })

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface GeneratedPuzzleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertGeneratedPuzzle(puzzle: GeneratedPuzzle)
+    suspend fun insertGeneratedPuzzle(puzzle: GeneratedPuzzle)
 
     @Query("SELECT * from GeneratedPuzzle where id = :id LIMIT 1")
     fun getGeneratedPuzzle(id: Int): Flow<GeneratedPuzzle?>
@@ -15,10 +15,10 @@ interface GeneratedPuzzleDao {
     fun getGeneratedPuzzles(): Flow<List<GeneratedPuzzle>>
 
     @Delete
-    fun deletePuzzle(puzzle: GeneratedPuzzle)
+    suspend fun deletePuzzle(vararg puzzles: GeneratedPuzzle): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertPuzzle(puzzleSave: PuzzleSave)
+    suspend fun insertPuzzle(puzzleSave: PuzzleSave)
 
     /**
      * Turn a generated puzzle into an empty puzzle save with the correct number of clues, failing
@@ -28,14 +28,17 @@ interface GeneratedPuzzleDao {
      * @return True if the transaction succeeded, false if not
      */
     @Transaction
-    fun transformGeneratedPuzzleToSave(puzzle: GeneratedPuzzle, clueNumber: Int): Boolean {
-        return if (clueNumber >= puzzle.minimumClues) {
-            deletePuzzle(puzzle)
-            val save =
-                PuzzleSave(clues = puzzle.clues.map { (row, col, v) -> (row to col) to v.toInt() }
-                    .toMap(), entries = mapOf(), guesses = mapOf())
-            insertPuzzle(save)
-            true
-        } else false
+    suspend fun transformGeneratedPuzzleToSave(puzzle: GeneratedPuzzle, clueNumber: Int): Boolean {
+        return when {
+            clueNumber < puzzle.minimumClues -> false
+            deletePuzzle(puzzle) == 0 -> false
+            else -> {
+                val save =
+                    PuzzleSave(clues = puzzle.clues.take(clueNumber).map { (row, col, v) -> (row to col) to v.toInt() }
+                        .toMap(), entries = mapOf(), guesses = mapOf())
+                insertPuzzle(save)
+                true
+            }
+        }
     }
 }
