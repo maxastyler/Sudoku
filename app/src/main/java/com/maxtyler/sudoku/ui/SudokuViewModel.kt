@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.mapLatest
 import javax.inject.Inject
 
 @HiltViewModel
@@ -17,6 +18,8 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
     val puzzle = _puzzle.asStateFlow()
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
     val controlState = _controlState.asStateFlow()
+
+    val contradictions = _puzzle.mapLatest { it.findContradictions() }
 
     private var puzzleJob: Job? = null
 

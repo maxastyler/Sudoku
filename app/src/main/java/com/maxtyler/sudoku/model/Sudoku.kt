@@ -29,6 +29,11 @@ data class Sudoku(
 
     fun clearGuess(coord: Pair<Int, Int>): Sudoku = copy(guesses = this.guesses - coord)
 
+    fun findContradictions(): List<Pair<Int, Int>> = this.entries.mapNotNull { (coord, entry) ->
+        if (Solver.neighbours[coord]?.any { c -> (this.clues[c] == entry) or (this.entries[c] == entry) }
+                ?: false) coord else null
+    }
+
     companion object {
         private fun inBounds(coord: Pair<Int, Int>): Boolean =
             (coord.first >= 0) and (coord.first <= 8) and (coord.second >= 0) and (coord.second <= 8)

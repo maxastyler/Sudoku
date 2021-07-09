@@ -32,9 +32,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Main(sudokuViewModel: SudokuViewModel = viewModel()) {
     val sudoku by sudokuViewModel.puzzle.collectAsState()
+    val contradictions by sudokuViewModel.contradictions.collectAsState(initial = listOf())
     val controlState by sudokuViewModel.controlState.collectAsState()
     SudokuView(
         sudoku,
+        contradictions,
         controlState,
         onCellPressed = { sudokuViewModel.toggleSquare(it) },
         onEntryPressed = { coord, i -> sudokuViewModel.toggleEntry(coord, i) },

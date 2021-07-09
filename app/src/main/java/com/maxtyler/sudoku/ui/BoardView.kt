@@ -26,8 +26,8 @@ import kotlin.math.roundToInt
 private fun DrawScope.drawClue(
     clue: Int,
     paint: Paint,
-    textColor: Color = Color(0xff00ff00),
-    backgroundColor: Color = Color.Magenta,
+    textColor: Color = Color(0xff000000),
+    backgroundColor: Color = Color(0xffeeeeee),
     boxColor: Color = Color.Black,
     boxThickness: Float = 10f
 ) {
@@ -59,11 +59,11 @@ private fun DrawScope.drawClue(
     }
 }
 
-private fun DrawScope.drawEntry(entry: Int, paint: Paint, color: Color = Color(0xffff0000)) {
+private fun DrawScope.drawEntry(entry: Int, paint: Paint, textColor: Color = Color(0xff000000)) {
     val bounds = Rect()
     val textSize = size.minDimension / 9
     paint.textSize = textSize
-    paint.color = color.toArgb()
+    paint.color = textColor.toArgb()
     paint.getTextBounds(entry.toString(), 0, 1, bounds)
 
     drawIntoCanvas {
@@ -79,8 +79,8 @@ private fun DrawScope.drawEntry(entry: Int, paint: Paint, color: Color = Color(0
 private fun DrawScope.drawGuess(
     guess: Set<Int>,
     paint: Paint,
-    guessColor: Color = Color(0xffff00ff),
-    noGuessColor: Color = Color(0x22ff00ff)
+    guessColor: Color = Color(0xff666666),
+    noGuessColor: Color = Color(0x00ffffff)
 ) {
     val guessCellSize = size.minDimension / 27
     paint.textSize = guessCellSize
@@ -106,7 +106,7 @@ private fun DrawScope.drawGuess(
     }
 }
 
-fun DrawScope.drawGrid(color: Color = Color.Black, thinWidth: Float = 1f, thickWidth: Float = 5f) {
+fun DrawScope.drawGrid(color: Color = Color.Black, thinWidth: Float = 1f, thickWidth: Float = 10f) {
     val boardSize = size.minDimension
     val lineSpacing = boardSize / 9
     (0..9).forEach {
@@ -126,7 +126,7 @@ fun DrawScope.drawGrid(color: Color = Color.Black, thinWidth: Float = 1f, thickW
     }
 }
 
-fun DrawScope.drawNumbers(sudoku: Sudoku) {
+fun DrawScope.drawNumbers(sudoku: Sudoku, contradictions: List<Pair<Int, Int>>) {
     val paint = Paint()
     paint.textAlign = Paint.Align.CENTER
     paint.isAntiAlias = true
@@ -141,7 +141,11 @@ fun DrawScope.drawNumbers(sudoku: Sudoku) {
                 sudoku.clues[coord]?.let { clue ->
                     drawClue(clue, paint)
                 } ?: sudoku.entries[coord]?.let { entry ->
-                    drawEntry(entry, paint)
+                    drawEntry(
+                        entry,
+                        paint,
+                        if (coord in contradictions) Color(0xffff0000) else Color(0xff000000)
+                    )
                 } ?: sudoku.guesses.getOrDefault(coord, setOf()).let { guess ->
                     drawGuess(guess, paint)
                 }
@@ -152,7 +156,7 @@ fun DrawScope.drawNumbers(sudoku: Sudoku) {
 
 fun DrawScope.drawSelection(
     controlState: ControlState,
-    color: Color = Color.Cyan,
+    color: Color = Color.DarkGray,
     strokeWidth: Float = 10f
 ) {
     val boardSize = size.minDimension
@@ -172,6 +176,7 @@ fun DrawScope.drawSelection(
 @Composable
 fun BoardView(
     sudoku: Sudoku,
+    contradictions: List<Pair<Int, Int>>,
     controlState: ControlState,
     onCellPressed: (Pair<Int, Int>) -> Unit = {}
 ) {
@@ -191,7 +196,7 @@ fun BoardView(
 
         drawGrid()
 
-        drawNumbers(sudoku)
+        drawNumbers(sudoku, contradictions)
 
         drawSelection(controlState)
     }

@@ -10,6 +10,7 @@ import com.maxtyler.sudoku.ui.SelectionView
 @Composable
 fun SudokuView(
     sudoku: Sudoku,
+    contradictions: List<Pair<Int, Int>>,
     controlState: ControlState,
     onCellPressed: (Pair<Int, Int>) -> Unit = {},
     onEntryPressed: (Pair<Int, Int>, Int) -> Unit = { _, _ -> Unit },
@@ -18,8 +19,9 @@ fun SudokuView(
     Column() {
         BoardView(
             sudoku = sudoku,
+            contradictions = contradictions,
             controlState = controlState,
-            onCellPressed = onCellPressed
+            onCellPressed = onCellPressed,
         )
         val (coord, entry, guess) = controlState.selected?.let { coord ->
             Triple(
