@@ -12,6 +12,6 @@ import androidx.room.PrimaryKey
  */
 @Entity
 data class GeneratedPuzzle(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val clues: List<Triple<Int, Int, String>>, val minimumClues: Int
 )

@@ -6,9 +6,7 @@ import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.repository.PuzzleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,19 +22,13 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
     private var puzzleJob: Job? = null
 
     init {
-        generatePuzzle(30)
+        getNewPuzzle(30)
     }
 
-    fun generatePuzzle(numberFilled: Int) {
+    fun getNewPuzzle(numberFilled: Int) {
         puzzleJob?.cancel()
-        puzzleJob = viewModelScope.launch {
-            val sudoku = withContext(Dispatchers.Default) {
-                puzzleRepository.getPuzzle(numberFilled = numberFilled)
-            }
-            if (isActive) {
-                setNewPuzzle(sudoku)
-            }
-        }
+        puzzleJob = viewModelScope.launch(Dispatchers.IO) {
+            puzzleRepository.getPuzzle().filterNotNull().first()}
     }
 
     fun setNewPuzzle(puzzle: Sudoku) {

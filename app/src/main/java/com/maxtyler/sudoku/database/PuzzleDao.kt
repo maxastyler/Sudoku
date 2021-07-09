@@ -9,7 +9,10 @@ interface PuzzleDao {
     suspend fun insertGeneratedPuzzle(puzzle: GeneratedPuzzle)
 
     @Query("SELECT * from GeneratedPuzzle where id = :id LIMIT 1")
-    fun getGeneratedPuzzle(id: Int): Flow<GeneratedPuzzle?>
+    fun getGeneratedPuzzle(id: Long): Flow<GeneratedPuzzle?>
+
+    @Query("SELECT * from GeneratedPuzzle LIMIT 1")
+    fun getFirstGeneratedPuzzle(): Flow<GeneratedPuzzle?>
 
     @Query("SELECT * from GeneratedPuzzle")
     fun getGeneratedPuzzles(): Flow<List<GeneratedPuzzle>>
@@ -24,11 +27,13 @@ interface PuzzleDao {
     fun getPuzzleSaves(): Flow<List<PuzzleSave>>
 
     @Query("SELECT * from puzzlesave where id=:id LIMIT 1")
-    fun getPuzzleSave(id: Int): Flow<PuzzleSave?>
+    fun getPuzzleSave(id: Long): Flow<PuzzleSave?>
 
     @Delete
     fun deletePuzzleSave(vararg puzzle: PuzzleSave): Int
 
+    @Query("SELECT COUNT(id) FROM generatedpuzzle")
+    fun generatedPuzzleCount(): Flow<Int>
 
     /**
      * Turn a generated puzzle into an empty puzzle save with the correct number of clues, failing
@@ -38,16 +43,21 @@ interface PuzzleDao {
      * @return True if the transaction succeeded, false if not
      */
     @Transaction
-    suspend fun transformGeneratedPuzzleToSave(puzzle: GeneratedPuzzle, clueNumber: Int): PuzzleSave? {
+    suspend fun transformGeneratedPuzzleToSave(
+        puzzle: GeneratedPuzzle,
+        clueNumber: Int
+    ): Flow<PuzzleSave?>? {
         return when {
-            clueNumber < puzzle.minimumClues -> false
-            deletePuzzle(puzzle) == 0 -> false
+            clueNumber < puzzle.minimumClues -> null
+            deletePuzzle(puzzle) == 0 -> null
             else -> {
                 val save =
-                    PuzzleSave(clues = puzzle.clues.take(clueNumber).map { (row, col, v) -> (row to col) to v.toInt() }
-                        .toMap(), entries = mapOf(), guesses = mapOf())
-                val puzzleId = insertPuzzle(save)
-
+                    PuzzleSave(
+                        clues = puzzle.clues.take(clueNumber)
+                            .map { (row, col, v) -> (row to col) to v.toInt() }
+                            .toMap(), entries = mapOf(), guesses = mapOf())
+                val puzzleId = insertPuzzleSave(save)
+                getPuzzleSave(puzzleId)
             }
         }
     }

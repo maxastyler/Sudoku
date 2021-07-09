@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class PuzzleSave(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val clues: Map<Pair<Int, Int>, Int>,
     val entries: Map<Pair<Int, Int>, Int>,
     val guesses: Map<Pair<Int, Int>, Set<Int>>
