@@ -9,6 +9,14 @@ android {
     compileSdk = 30
     buildToolsVersion = "30.0.3"
 
+    packagingOptions {
+        // for JNA and JNA-platform
+//        jniLibs.excludes.add("META-INF/AL2.0")
+//        jniLibs.excludes.add("META-INF/LGPL2.1")
+        exclude("META-INF/AL2.0")
+        exclude("META-INF/LGPL2.1")
+    }
+
     defaultConfig {
         applicationId = "com.maxtyler.sudoku"
         minSdk = 26
@@ -56,6 +64,15 @@ dependencies {
 
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0-alpha03")
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha04")
+
+    // room stuff
+    implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
+    annotationProcessor("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+
+    // To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
+    testImplementation("androidx.room:room-testing:${rootProject.extra["room_version"]}")
 
     implementation("androidx.core:core-ktx:1.6.0")
     implementation("androidx.appcompat:appcompat:1.3.0")
