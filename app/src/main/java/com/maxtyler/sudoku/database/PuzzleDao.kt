@@ -11,7 +11,7 @@ interface PuzzleDao {
     @Query("SELECT * from GeneratedPuzzle where id = :id LIMIT 1")
     fun getGeneratedPuzzle(id: Long): Flow<GeneratedPuzzle?>
 
-    @Query("SELECT * from GeneratedPuzzle LIMIT 1")
+    @Query("SELECT * from GeneratedPuzzle ORDER BY id ASC LIMIT 1")
     fun getFirstGeneratedPuzzle(): Flow<GeneratedPuzzle?>
 
     @Query("SELECT * from GeneratedPuzzle")
