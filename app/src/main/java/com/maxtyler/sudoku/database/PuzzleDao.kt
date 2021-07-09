@@ -4,7 +4,7 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface GeneratedPuzzleDao {
+interface PuzzleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGeneratedPuzzle(puzzle: GeneratedPuzzle)
 
@@ -18,7 +18,17 @@ interface GeneratedPuzzleDao {
     suspend fun deletePuzzle(vararg puzzles: GeneratedPuzzle): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPuzzle(puzzleSave: PuzzleSave)
+    suspend fun insertPuzzleSave(puzzleSave: PuzzleSave): Long
+
+    @Query("SELECT * from puzzlesave")
+    fun getPuzzleSaves(): Flow<List<PuzzleSave>>
+
+    @Query("SELECT * from puzzlesave where id=:id LIMIT 1")
+    fun getPuzzleSave(id: Int): Flow<PuzzleSave?>
+
+    @Delete
+    fun deletePuzzleSave(vararg puzzle: PuzzleSave): Int
+
 
     /**
      * Turn a generated puzzle into an empty puzzle save with the correct number of clues, failing
@@ -28,7 +38,7 @@ interface GeneratedPuzzleDao {
      * @return True if the transaction succeeded, false if not
      */
     @Transaction
-    suspend fun transformGeneratedPuzzleToSave(puzzle: GeneratedPuzzle, clueNumber: Int): Boolean {
+    suspend fun transformGeneratedPuzzleToSave(puzzle: GeneratedPuzzle, clueNumber: Int): PuzzleSave? {
         return when {
             clueNumber < puzzle.minimumClues -> false
             deletePuzzle(puzzle) == 0 -> false
@@ -36,8 +46,8 @@ interface GeneratedPuzzleDao {
                 val save =
                     PuzzleSave(clues = puzzle.clues.take(clueNumber).map { (row, col, v) -> (row to col) to v.toInt() }
                         .toMap(), entries = mapOf(), guesses = mapOf())
-                insertPuzzle(save)
-                true
+                val puzzleId = insertPuzzle(save)
+
             }
         }
     }

@@ -8,5 +8,5 @@ import androidx.room.TypeConverters
 @TypeConverters(SudokuConverters::class)
 abstract class SudokuDatabase : RoomDatabase() {
     abstract fun getPuzzleSaveDao(): PuzzleSaveDao
-    abstract fun getGeneratedPuzzleDao(): GeneratedPuzzleDao
+    abstract fun getGeneratedPuzzleDao(): PuzzleDao
 }
