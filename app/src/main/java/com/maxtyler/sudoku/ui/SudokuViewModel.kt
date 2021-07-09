@@ -5,28 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.repository.PuzzleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepository) :
     ViewModel() {
     private val _puzzle: MutableStateFlow<Sudoku> = MutableStateFlow(Sudoku())
+    val puzzle = _puzzle.asStateFlow()
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
     val controlState = _controlState.asStateFlow()
-    val puzzleView: Flow<SudokuDrawState> = _puzzle.mapLatest { SudokuDrawState(it) }
 
     private var puzzleJob: Job? = null
 
     init {
-        generatePuzzle(31)
+        generatePuzzle(30)
     }
 
     fun generatePuzzle(numberFilled: Int) {
@@ -35,7 +30,9 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
             val sudoku = withContext(Dispatchers.Default) {
                 puzzleRepository.getPuzzle(numberFilled = numberFilled)
             }
-            setNewPuzzle(sudoku)
+            if (isActive) {
+                setNewPuzzle(sudoku)
+            }
         }
     }
 
@@ -44,8 +41,11 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
         _puzzle.value = puzzle
     }
 
-    fun toggleElement(coord: Pair<Int, Int>, element: Int) =
-        _puzzle.value.toggleElement(coord, element)?.let {
+    fun toggleEntry(coord: Pair<Int, Int>, entry: Int) =
+        _puzzle.value.toggleEntry(coord, entry)?.let { _puzzle.value = it }
+
+    fun toggleGuess(coord: Pair<Int, Int>, guess: Int) =
+        _puzzle.value.toggleGuess(coord, guess)?.let {
             _puzzle.value = it
         }
 

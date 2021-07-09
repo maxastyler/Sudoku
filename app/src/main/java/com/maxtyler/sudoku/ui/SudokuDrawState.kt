@@ -10,12 +10,15 @@ data class SudokuDrawState(val values: Map<Pair<Int, Int>, SudokuState>) {
             Pair(coord,
                 sudoku.clues[coord]?.let {
                     SudokuState.Clue(it)
-                } ?: SudokuState.Guess(sudoku.guesses[coord].orEmpty()))
+                } ?: SudokuState.UserEntry(
+                    entry = sudoku.entries[coord],
+                    guess = sudoku.guesses[coord].orEmpty()
+                ))
         }
     }.toMap())
 
     sealed class SudokuState {
         data class Clue(val v: Int) : SudokuState()
-        data class Guess(val v: Set<Int>) : SudokuState()
+        data class UserEntry(val entry: Int?, val guess: Set<Int>) : SudokuState()
     }
 }

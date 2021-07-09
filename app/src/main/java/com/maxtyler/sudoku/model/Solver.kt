@@ -1,7 +1,5 @@
 package com.maxtyler.sudoku.model
 
-import android.util.Log
-
 data class Solver(val board: Map<Pair<Int, Int>, String>) {
     constructor(sudoku: Sudoku) : this(board = (0..8).flatMap { row ->
         (0..8).map { col ->

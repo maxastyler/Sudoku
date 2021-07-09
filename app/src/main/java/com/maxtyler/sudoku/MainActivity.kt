@@ -9,8 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.maxtyler.sudoku.model.Sudoku
-import com.maxtyler.sudoku.ui.SudokuDrawState
 import com.maxtyler.sudoku.ui.SudokuViewModel
 import com.maxtyler.sudoku.ui.theme.SudokuTheme
 import com.maxtyler.sudoku.ui.theme.SudokuView
@@ -33,12 +31,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Main(sudokuViewModel: SudokuViewModel = viewModel()) {
-    val sudoku by sudokuViewModel.puzzleView.collectAsState(initial = SudokuDrawState(Sudoku()))
+    val sudoku by sudokuViewModel.puzzle.collectAsState()
     val controlState by sudokuViewModel.controlState.collectAsState()
     SudokuView(
         sudoku,
         controlState,
         onCellPressed = { sudokuViewModel.toggleSquare(it) },
-        onElementToggled = sudokuViewModel::toggleElement
+        onEntryPressed = { coord, i -> sudokuViewModel.toggleEntry(coord, i) },
+        onGuessPressed = { coord, i -> sudokuViewModel.toggleGuess(coord, i) },
     )
 }
