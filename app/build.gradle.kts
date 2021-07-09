@@ -3,6 +3,8 @@ plugins {
     id("kotlin-android")
     kotlin("kapt")
     id("dagger.hilt.android.plugin")
+//    kotlin("jvm") version "1.5.20" // or kotlin("multiplatform") or any other kotlin plugin
+    kotlin("plugin.serialization") version "1.5.10"
 }
 
 android {
@@ -68,6 +70,13 @@ dependencies {
     // room stuff
     implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
     annotationProcessor("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+
+    // serialisation
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+
+    // paging
+    implementation("androidx.paging:paging-runtime:${rootProject.extra["paging_version"]}")
+    implementation("androidx.paging:paging-compose:1.0.0-alpha11")
 
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:${rootProject.extra["room_version"]}")

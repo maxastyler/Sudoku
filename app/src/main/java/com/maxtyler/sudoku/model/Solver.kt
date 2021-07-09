@@ -17,8 +17,14 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
         return search(map)
     }
 
-    fun findMinSolutions(toRemove: Int): MutableMap<Pair<Int, Int>, String>? {
+    /**
+     * Find the minimum solutions for the current board, and return the solutions
+     * in a list, where the first `toRemove` elements create a map which
+     * is solveable, and each element after can be added to the map to decrease the difficulty
+     */
+    fun findMinSolutions(toRemove: Int): List<Triple<Int, Int, String>>? {
         val unset = (1..9).joinToString(separator = "")
+        val clues: MutableList<Triple<Int, Int, String>> = mutableListOf()
         return solve()?.let { solution ->
             val tempSolution = solution.toMutableMap()
             var removed = 0
@@ -32,11 +38,16 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
                     null -> {
                         break
                     }
-                    else -> tempSolution[x] = unset
+                    else -> {
+                        clues.add(Triple(x.first, x.second, tempSolution[x]!!))
+                        tempSolution[x] = unset
+                    }
                 }
                 removed += 1
             }
-            tempSolution
+            tempSolution.filterValues { v -> v.length == 1 }
+                .forEach { (k, v) -> clues.add(Triple(k.first, k.second, v)) }
+            clues.reversed()
         }
     }
 

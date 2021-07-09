@@ -1,39 +1,30 @@
 package com.maxtyler.sudoku.database
 
 import androidx.room.TypeConverter
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class SudokuConverters {
-    @TypeConverter
-    fun clueToString(clue: Map<Pair<Int, Int>, Int>): String =
-        clue.map { (k, v) -> listOf(k.first, k.second, v).joinToString(separator = ",") }
-            .joinToString(separator = ",")
+    private val json = Json { allowStructuredMapKeys = true }
 
     @TypeConverter
-    fun stringToClue(string: String): Map<Pair<Int, Int>, Int> =
-        string.split(",").chunked(3).filter { it.size == 3 }
-            .map { (a, b, c) -> Pair(a.toInt(), b.toInt()) to c.toInt() }
-            .toMap()
+    fun clueToString(clue: Map<Pair<Int, Int>, Int>): String = json.encodeToString(clue)
 
     @TypeConverter
-    fun guessesToString(guess: Map<Pair<Int, Int>, Set<Int>>): String = guess.map { (k, v) ->
-        listOf(
-            k.first.toString(),
-            k.second.toString(),
-            v.joinToString(separator = "|")
-        ).joinToString(",")
-    }.joinToString(";")
+    fun stringToClue(string: String): Map<Pair<Int, Int>, Int> = json.decodeFromString(string)
+
+    @TypeConverter
+    fun guessesToString(guess: Map<Pair<Int, Int>, Set<Int>>): String = json.encodeToString(guess)
 
     @TypeConverter
     fun stringToGuesses(string: String): Map<Pair<Int, Int>, Set<Int>> =
-        string.split(";").mapNotNull {
-            try {
-                val (x, y, vs) = it.split(",")
-                Pair(x.toInt(), y.toInt()) to vs.split("|").map { it.toInt() }.toSet()
-            } catch (e: IndexOutOfBoundsException) {
-                null
-            } catch (e: NumberFormatException) {
-                null
-            }
-        }.toMap()
+        json.decodeFromString(string)
 
+    @TypeConverter
+    fun saveListToString(save: List<Triple<Int, Int, String>>): String = json.encodeToString(save)
+
+    @TypeConverter
+    fun stringToSaveList(string: String): List<Triple<Int, Int, String>> =
+        json.decodeFromString(string)
 }
