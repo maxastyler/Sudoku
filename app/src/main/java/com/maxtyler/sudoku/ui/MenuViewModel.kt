@@ -3,6 +3,7 @@ package com.maxtyler.sudoku.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.repository.PuzzleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,7 @@ class MenuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepo
     ViewModel() {
 
     val saves = puzzleRepository.saves
+    val puzzleCount = puzzleRepository.generatedPuzzleCount
 
     init {
         viewModelScope.launch {
@@ -29,8 +31,11 @@ class MenuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepo
         }
     }
 
+    fun deletePuzzleSave(puzzleSave: PuzzleSave) {
+        viewModelScope.launch(Dispatchers.IO) { puzzleRepository.deleteSave(puzzleSave) }
+    }
+
     suspend fun createPuzzle(): Long? {
-        Log.d("GAMES", "Creating! :)")
         return withContext(Dispatchers.IO) {
             puzzleRepository.createNewPuzzle(30)?.first()?.id
         }

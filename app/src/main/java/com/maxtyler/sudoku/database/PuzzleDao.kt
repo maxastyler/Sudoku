@@ -35,7 +35,7 @@ interface PuzzleDao {
     fun getPuzzleSave(id: Long): Flow<PuzzleSave?>
 
     @Delete
-    fun deletePuzzleSave(vararg puzzle: PuzzleSave): Int
+    suspend fun deletePuzzleSave(vararg puzzle: PuzzleSave): Int
 
     @Query("SELECT COUNT(id) FROM generatedpuzzle")
     fun generatedPuzzleCount(): Flow<Int>

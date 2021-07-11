@@ -53,6 +53,8 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
             ?.filterNotNull()
     }
 
+    suspend fun deleteSave(puzzleSave: PuzzleSave) = puzzleDao.deletePuzzleSave(puzzleSave)
+
     fun getPuzzle(puzzleId: Long): Flow<PuzzleSave?> = puzzleDao.getPuzzleSave(puzzleId)
 
     private fun generatePuzzle(numberFilled: Int): List<Triple<Int, Int, String>> {

@@ -2,6 +2,7 @@ package com.maxtyler.sudoku.ui.theme
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.ui.BoardView
 import com.maxtyler.sudoku.ui.ControlState
@@ -16,7 +17,7 @@ fun SudokuView(
     onEntryPressed: (Pair<Int, Int>, Int) -> Unit = { _, _ -> Unit },
     onGuessPressed: (Pair<Int, Int>, Int) -> Unit = { _, _ -> Unit },
 ) {
-    Column() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         BoardView(
             sudoku = sudoku,
             contradictions = contradictions,
