@@ -1,21 +1,27 @@
 package com.maxtyler.sudoku.ui
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.repository.PuzzleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 @HiltViewModel
-class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepository) :
+class SudokuViewModel @Inject constructor(
+    private val puzzleRepository: PuzzleRepository,
+    savedStateHandle: SavedStateHandle
+) :
     ViewModel() {
+    private var numberOfClues: Int = 30
+    private var puzzleSave: PuzzleSave? = null
     private val _puzzle: MutableStateFlow<Sudoku> = MutableStateFlow(Sudoku())
     val puzzle = _puzzle.asStateFlow()
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
@@ -26,12 +32,44 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
     private var puzzleJob: Job? = null
 
     init {
-        getNewPuzzle(30)
+        savedStateHandle.get<Int>("numberOfClues")?.let { numberOfClues = it }
+        savedStateHandle.get<Long>("gameId")?.let {
+            loadPuzzle(it)
+        } ?: run { getNewPuzzle(numberOfClues) }
     }
 
     fun getNewPuzzle(numberFilled: Int) {
-        viewModelScope.launch {
-            puzzleRepository.getPuzzle(numberFilled).collectLatest { _puzzle.emit(it) }
+        puzzleJob?.cancel()
+        puzzleSave = null
+
+        puzzleJob = viewModelScope.launch {
+            puzzleRepository.createNewPuzzle(numberFilled)?.collectLatest {
+                puzzleSave = it
+                _puzzle.emit(
+                    Sudoku(
+                        clues = it.clues,
+                        entries = it.entries,
+                        guesses = it.guesses
+                    )
+                )
+            }
+        }
+    }
+
+    fun loadPuzzle(puzzleId: Long) {
+        puzzleJob?.cancel()
+        puzzleJob = viewModelScope.launch {
+            puzzleRepository.getPuzzle(puzzleId).flowOn(Dispatchers.IO).filterNotNull()
+                .collectLatest {
+                    puzzleSave = it
+                    _puzzle.emit(
+                        Sudoku(
+                            clues = it.clues,
+                            entries = it.entries,
+                            guesses = it.guesses
+                        )
+                    )
+                }
         }
     }
 
@@ -55,6 +93,23 @@ class SudokuViewModel @Inject constructor(private val puzzleRepository: PuzzleRe
             _controlState.value.selected == square -> _controlState.value =
                 _controlState.value.copy(selected = null)
             else -> _controlState.value = _controlState.value.copy(selected = square)
+        }
+    }
+
+    fun writeCurrentSave() {
+        puzzleSave?.let {
+            viewModelScope.launch(Dispatchers.IO) {
+                supervisorScope {
+                    puzzleRepository.writeSave(
+                        it.copy(
+                            clues = _puzzle.value.clues,
+                            entries = _puzzle.value.entries.filterValues { it != null }
+                                .mapValues { (_, v) -> v!! },
+                            guesses = _puzzle.value.guesses
+                        )
+                    )
+                }
+            }
         }
     }
 }

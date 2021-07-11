@@ -125,7 +125,7 @@ class PuzzleTest {
 
     @Test
     fun getFirstGeneratedPuzzle() {
-        assertNull(runBlocking { puzzleDao.getFirstGeneratedPuzzle().first() })
+        assertNull(runBlocking { puzzleDao.getFirstGeneratedPuzzleFlow().first() })
         runBlocking {
             (1..4).forEach {
                 puzzleDao.insertGeneratedPuzzle(
@@ -138,6 +138,6 @@ class PuzzleTest {
                 )
             }
         }
-        assertNotNull(runBlocking { puzzleDao.getFirstGeneratedPuzzle() })
+        assertNotNull(runBlocking { puzzleDao.getFirstGeneratedPuzzleFlow() })
     }
 }

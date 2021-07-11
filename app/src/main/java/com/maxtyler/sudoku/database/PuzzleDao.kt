@@ -2,6 +2,8 @@ package com.maxtyler.sudoku.database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
+import java.util.*
 
 @Dao
 interface PuzzleDao {
@@ -12,7 +14,10 @@ interface PuzzleDao {
     fun getGeneratedPuzzle(id: Long): Flow<GeneratedPuzzle?>
 
     @Query("SELECT * from GeneratedPuzzle ORDER BY id ASC LIMIT 1")
-    fun getFirstGeneratedPuzzle(): Flow<GeneratedPuzzle?>
+    fun getFirstGeneratedPuzzleFlow(): Flow<GeneratedPuzzle?>
+
+//    @Query("SELECT * from GeneratedPuzzle ORDER BY id ASC LIMIT 1")
+//    fun getFirstGeneratedPuzzle(): GeneratedPuzzle?
 
     @Query("SELECT * from GeneratedPuzzle")
     fun getGeneratedPuzzles(): Flow<List<GeneratedPuzzle>>
@@ -23,7 +28,7 @@ interface PuzzleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPuzzleSave(puzzleSave: PuzzleSave): Long
 
-    @Query("SELECT * from puzzlesave")
+    @Query("SELECT * from puzzlesave ORDER BY dateWritten DESC")
     fun getPuzzleSaves(): Flow<List<PuzzleSave>>
 
     @Query("SELECT * from puzzlesave where id=:id LIMIT 1")
@@ -55,7 +60,10 @@ interface PuzzleDao {
                     PuzzleSave(
                         clues = puzzle.clues.take(clueNumber)
                             .map { (row, col, v) -> (row to col) to v.toInt() }
-                            .toMap(), entries = mapOf(), guesses = mapOf())
+                            .toMap(),
+                        entries = mapOf(),
+                        guesses = mapOf(),
+                        dateWritten = Date.from(Instant.now()))
                 val puzzleId = insertPuzzleSave(save)
                 getPuzzleSave(puzzleId)
             }

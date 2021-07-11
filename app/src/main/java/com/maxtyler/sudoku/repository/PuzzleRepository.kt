@@ -1,6 +1,5 @@
 package com.maxtyler.sudoku.repository
 
-import android.util.Log
 import com.maxtyler.sudoku.database.GeneratedPuzzle
 import com.maxtyler.sudoku.database.PuzzleDao
 import com.maxtyler.sudoku.database.PuzzleSave
@@ -11,6 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.util.*
 import javax.inject.Inject
 
 class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
@@ -18,6 +19,12 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     private val minSolutions: Int = 28
 
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    val saves: Flow<List<PuzzleSave>>
+        get() = puzzleDao.getPuzzleSaves()
+
+    val generatedPuzzleCount: Flow<Int>
+        get() = puzzleDao.generatedPuzzleCount()
 
     init {
         scope.launch {
@@ -40,19 +47,23 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     private fun puzzleSaveToSudoku(puzzleSave: PuzzleSave): Sudoku =
         Sudoku(clues = puzzleSave.clues, entries = puzzleSave.entries, guesses = puzzleSave.guesses)
 
-    suspend fun getPuzzle(clueNumber: Int): Flow<Sudoku> {
-        Log.d("GAMES", "Getting puzzle...")
-        val puzzle = puzzleDao.getFirstGeneratedPuzzle().filterNotNull().first()
-        Log.d("GAMES", "Got puzzle...")
-        return puzzleDao.transformGeneratedPuzzleToSave(puzzle, clueNumber = clueNumber)!!
-            .filterNotNull().mapLatest { Sudoku(it.clues, it.entries, it.guesses) }
+    suspend fun createNewPuzzle(clueNumber: Int): Flow<PuzzleSave>? {
+        val puzzle = puzzleDao.getFirstGeneratedPuzzleFlow().filterNotNull().first()
+        return puzzleDao.transformGeneratedPuzzleToSave(puzzle, clueNumber = clueNumber)
+            ?.filterNotNull()
     }
 
-    fun generatePuzzle(numberFilled: Int): List<Triple<Int, Int, String>> {
+    fun getPuzzle(puzzleId: Long): Flow<PuzzleSave?> = puzzleDao.getPuzzleSave(puzzleId)
+
+    private fun generatePuzzle(numberFilled: Int): List<Triple<Int, Int, String>> {
         var puzzle: List<Triple<Int, Int, String>>? = null
         while (puzzle == null) {
             Solver(Sudoku()).findMinSolutions(81 - numberFilled)?.let { puzzle = it }
         }
         return puzzle!!
+    }
+
+    suspend fun writeSave(puzzleSave: PuzzleSave) {
+        puzzleDao.insertPuzzleSave(puzzleSave.copy(dateWritten = Date.from(Instant.now())))
     }
 }

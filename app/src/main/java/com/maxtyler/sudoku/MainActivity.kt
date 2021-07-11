@@ -5,10 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.maxtyler.sudoku.ui.Main
 import com.maxtyler.sudoku.ui.SudokuViewModel
 import com.maxtyler.sudoku.ui.theme.SudokuTheme
 import com.maxtyler.sudoku.ui.theme.SudokuView
@@ -30,10 +32,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Main(sudokuViewModel: SudokuViewModel = viewModel()) {
+fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel()) {
     val sudoku by sudokuViewModel.puzzle.collectAsState()
     val contradictions by sudokuViewModel.contradictions.collectAsState(initial = listOf())
     val controlState by sudokuViewModel.controlState.collectAsState()
+
+    RunFunctionOnPauseAndResume(onPause = { sudokuViewModel.writeCurrentSave() }, onResume = {})
+
     SudokuView(
         sudoku,
         contradictions,
@@ -42,4 +47,23 @@ fun Main(sudokuViewModel: SudokuViewModel = viewModel()) {
         onEntryPressed = { coord, i -> sudokuViewModel.toggleEntry(coord, i) },
         onGuessPressed = { coord, i -> sudokuViewModel.toggleGuess(coord, i) },
     )
+}
+
+@Composable
+fun RunFunctionOnPauseAndResume(onPause: () -> Unit, onResume: () -> Unit) {
+    val pause by rememberUpdatedState(newValue = onPause)
+    val resume by rememberUpdatedState(newValue = onResume)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    val observer = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_PAUSE -> pause()
+            Lifecycle.Event.ON_RESUME -> resume()
+            else -> Unit
+        }
+    }
+    DisposableEffect(key1 = lifecycle) {
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
 }
