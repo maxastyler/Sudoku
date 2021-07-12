@@ -1,8 +1,7 @@
 package com.maxtyler.sudoku.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -17,7 +16,7 @@ import com.maxtyler.sudoku.RunFunctionOnPauseAndResume
 import com.maxtyler.sudoku.ui.theme.SudokuView
 
 @Composable
-fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel()) {
+fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel(), onBackToMenu: () -> Unit = {}) {
     val sudoku by sudokuViewModel.puzzle.collectAsState()
     val contradictions by sudokuViewModel.contradictions.collectAsState(initial = listOf())
     val controlState by sudokuViewModel.controlState.collectAsState()
@@ -44,7 +43,16 @@ fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel()) {
         if (completed) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Card() {
-                    Text("Completed :)", modifier = Modifier.padding(20.dp))
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Woaaaaaah! Nice one :O", modifier = Modifier.padding(20.dp))
+                        Spacer(Modifier.height(10.dp))
+                        Button(onClick = onBackToMenu) {
+                            Text("Back to menu")
+                        }
+                    }
                 }
             }
         }

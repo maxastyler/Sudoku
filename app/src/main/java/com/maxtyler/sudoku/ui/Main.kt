@@ -22,7 +22,7 @@ fun Main() {
                 navArgument("numberOfClues") { type = NavType.IntType })
         ) {
             val vm = hiltViewModel<SudokuViewModel>()
-            SudokuScreen(vm)
+            SudokuScreen(vm, { navController.navigateUp() })
         }
     }
 }
