@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,33 +29,48 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
     val saveCount by menuViewModel.puzzleCount.collectAsState(0)
 
     var scope = rememberCoroutineScope()
-
-    Column(
-        modifier = Modifier
-            .padding(10.dp)
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Button(modifier = Modifier
-            .padding(20.dp)
-            .fillMaxWidth(), onClick = {
-            scope.launch {
-                menuViewModel.createPuzzle()?.let {
-                    navHostController.navigate("game/${it}/30")
+    Scaffold(topBar = { SudokuTopBar(playingGame = false) }) {
+        Column(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column() {
+                    Text("Start a new game:")
+                    MenuViewModel.Difficulty.values().forEach {
+                        Button(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .fillMaxWidth(), onClick = {
+                                scope.launch {
+                                    menuViewModel.createPuzzle(it)?.let {
+                                        navHostController.navigate("game/${it}/30")
+                                    }
+                                }
+                            }, enabled = (saveCount > 0)
+                        ) {
+                            if (saveCount > 0) Text("Difficulty: ${it.name}")
+                            else Text("Waiting for game to generate puzzles...")
+                        }
+                    }
                 }
             }
-        }, enabled = (saveCount > 0)) {
-            if (saveCount > 0) Text("New Game")
-            else Text("Waiting for game to generate puzzles...")
-        }
+            Spacer(modifier = Modifier.height(10.dp))
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Continue a previous game:")
+                    LazyColumn(state = listState) {
 
-        LazyColumn(state = listState) {
-
-            items(saves) {
-                Box(modifier = Modifier.clickable { Log.d("GAMES", "Hi") }) {
-                    SaveView(it, onClicked = {
-                        navHostController.navigate("game/${it.id}/30")
-                    }, onDelete = { menuViewModel.deletePuzzleSave(it) })
+                        items(saves) {
+                            Box(modifier = Modifier.clickable { Log.d("GAMES", "Hi") }) {
+                                SaveView(it, onClicked = {
+                                    navHostController.navigate("game/${it.id}/30")
+                                }, onDelete = { menuViewModel.deletePuzzleSave(it) })
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -71,11 +86,25 @@ fun SaveView(puzzleSave: PuzzleSave, onClicked: () -> Unit = {}, onDelete: () ->
             .padding(10.dp)
             .fillMaxWidth()
             .clickable() { onClicked() }) {
-        Row(horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("${puzzleSave.id}")
-            Text("${puzzleSave.dateWritten}")
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(10.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.4f)
+                    .aspectRatio(1f)
+            ) {
+                BoardView(
+                    sudoku = sudoku,
+                    contradictions = listOf(),
+                    controlState = ControlState(null),
+                    controlsDisabled = true
+                )
+            }
+            IconButton(onClick = onDelete) {
+
+            }
             Button(onClick = onDelete) {
-                Text("x")
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Delete this puzzle")
+
             }
         }
     }

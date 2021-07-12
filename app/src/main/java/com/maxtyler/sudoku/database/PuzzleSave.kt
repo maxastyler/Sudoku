@@ -11,4 +11,5 @@ data class PuzzleSave(
     val entries: Map<Pair<Int, Int>, Int>,
     val guesses: Map<Pair<Int, Int>, Set<Int>>,
     val dateWritten: Date,
+    val completed: Boolean = false,
 )

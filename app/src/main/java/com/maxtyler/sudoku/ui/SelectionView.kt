@@ -20,12 +20,15 @@ sealed class SelectionType {
 
 @Composable
 fun NumberGrid(selected: Set<Int>, onItemPressed: (Int) -> Unit = {}) {
-    Row(modifier = Modifier, horizontalArrangement = Arrangement.SpaceEvenly) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
         (0..2).forEach { col ->
             Column() {
                 (0..2).forEach { row ->
                     val x = row * 3 + col + 1
                     Button(
+                        modifier = Modifier.padding(1.dp),
                         onClick = { onItemPressed(x) },
                         colors = ButtonDefaults.buttonColors(backgroundColor = if (x in selected) Color.Gray else Color.LightGray)
                     ) {

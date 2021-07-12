@@ -74,7 +74,8 @@ class PuzzleTest {
             clues = puzzle.clues.take(9 * 9 - toRemove).map { (a, b, c) -> Pair(a, b) to c.toInt() }
                 .toMap(),
             entries = mapOf(),
-            guesses = mapOf()
+            guesses = mapOf(),
+            dateWritten = Date(Instant.now())
         )
         ), saves
         )
@@ -124,7 +125,7 @@ class PuzzleTest {
     }
 
     @Test
-    fun getFirstGeneratedPuzzle() {
+    fun testGetFirstGeneratedPuzzle() {
         assertNull(runBlocking { puzzleDao.getFirstGeneratedPuzzleFlow().first() })
         runBlocking {
             (1..4).forEach {

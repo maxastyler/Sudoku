@@ -10,14 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.toSize
 import com.maxtyler.sudoku.model.Sudoku
@@ -122,6 +119,7 @@ fun DrawScope.drawGrid(color: Color = Color.Black, thinWidth: Float = 1f, thickW
             color = Color.Black,
             start = Offset(pos, 0f),
             end = Offset(pos, boardSize),
+            cap = StrokeCap.Square,
             strokeWidth = if (it.mod(3) == 0) thickWidth else thinWidth
         )
     }
@@ -140,7 +138,7 @@ fun DrawScope.drawNumbers(sudoku: Sudoku, contradictions: List<Pair<Int, Int>>) 
             val coord = row to col
             translate(left = row * lineSpacing, top = col * lineSpacing) {
                 sudoku.clues[coord]?.let { clue ->
-                    drawClue(clue, paint)
+                    drawClue(clue, paint, boxThickness = 1f)
                 } ?: sudoku.entries[coord]?.let { entry ->
                     drawEntry(
                         entry,
@@ -182,26 +180,32 @@ fun BoardView(
     sudoku: Sudoku,
     contradictions: List<Pair<Int, Int>>,
     controlState: ControlState,
-    onCellPressed: (Pair<Int, Int>) -> Unit = {}
+    onCellPressed: (Pair<Int, Int>) -> Unit = {},
+    controlsDisabled: Boolean = false
 ) {
-    Canvas(modifier = Modifier
-        .fillMaxWidth()
-        .aspectRatio(1f)
-        .pointerInput(Unit) {
-            detectTapGestures(onPress = { (x, y) ->
-                val squareSize = size.toSize().minDimension / 9
-                onCellPressed(
-                    Pair(
-                        floor(x / squareSize).roundToInt(), floor(y / squareSize).roundToInt()
+    Canvas(modifier = if (controlsDisabled)
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+    else
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .pointerInput(Unit) {
+                detectTapGestures(onPress = { (x, y) ->
+                    val squareSize = size.toSize().minDimension / 9
+                    onCellPressed(
+                        Pair(
+                            floor(x / squareSize).roundToInt(),
+                            floor(y / squareSize).roundToInt()
+                        )
                     )
-                )
-            })
-        }) {
+                })
+            }) {
 
-        drawGrid()
 
         drawNumbers(sudoku, contradictions)
-
-        drawSelection(controlState)
+        drawGrid()
+        drawSelection(if (controlsDisabled) ControlState() else controlState)
     }
 }

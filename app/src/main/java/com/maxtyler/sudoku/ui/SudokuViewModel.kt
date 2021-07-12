@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +26,8 @@ class SudokuViewModel @Inject constructor(
     val puzzle = _puzzle.asStateFlow()
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
     val controlState = _controlState.asStateFlow()
+    val completed: Flow<Boolean> = _puzzle.map { it.completed() }
+
 
     val contradictions = _puzzle.mapLatest { it.findContradictions() }
 
@@ -78,13 +80,21 @@ class SudokuViewModel @Inject constructor(
         _puzzle.value = puzzle
     }
 
-    fun toggleEntry(coord: Pair<Int, Int>, entry: Int) =
-        _puzzle.value.toggleEntry(coord, entry)?.let { _puzzle.value = it }
+    fun toggleEntry(coord: Pair<Int, Int>, entry: Int) {
+        _puzzle.value.toggleEntry(coord, entry)?.let {
+            it.completed()
+            _puzzle.value = it
+        }
+    }
 
     fun toggleGuess(coord: Pair<Int, Int>, guess: Int) =
         _puzzle.value.toggleGuess(coord, guess)?.let {
             _puzzle.value = it
         }
+
+    fun clearAllValues() {
+        _puzzle.value = _puzzle.value.clearAll()
+    }
 
     fun toggleSquare(square: Pair<Int, Int>) {
         when {
@@ -96,20 +106,15 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
-    fun writeCurrentSave() {
-        puzzleSave?.let {
-            viewModelScope.launch(Dispatchers.IO) {
-                supervisorScope {
-                    puzzleRepository.writeSave(
-                        it.copy(
-                            clues = _puzzle.value.clues,
-                            entries = _puzzle.value.entries.filterValues { it != null }
-                                .mapValues { (_, v) -> v!! },
-                            guesses = _puzzle.value.guesses
-                        )
-                    )
-                }
-            }
-        }
+    fun writeCurrentSave() = puzzleSave?.let {
+        puzzleRepository.writeSave(
+            it.copy(
+                clues = _puzzle.value.clues,
+                entries = _puzzle.value.entries.filterValues { it != null }
+                    .mapValues { (_, v) -> v!! },
+                guesses = _puzzle.value.guesses,
+                completed = runBlocking { completed.first() }
+            )
+        )
     }
 }

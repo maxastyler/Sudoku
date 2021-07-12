@@ -5,6 +5,9 @@ data class Sudoku(
     val entries: Map<Pair<Int, Int>, Int?> = mapOf(),
     val guesses: Map<Pair<Int, Int>, Set<Int>> = mapOf()
 ) {
+    fun completed(): Boolean =
+        ((entries.filterValues { it != null } + clues).count() >= 81) and findContradictions().isEmpty()
+
     fun toggleEntry(coord: Pair<Int, Int>, entry: Int): Sudoku? = when {
         !inBounds(coord) or (coord in clues.keys) -> null
         entries[coord] == entry -> copy(entries = entries + (coord to null))
@@ -28,6 +31,10 @@ data class Sudoku(
         }
 
     fun clearGuess(coord: Pair<Int, Int>): Sudoku = copy(guesses = this.guesses - coord)
+
+    fun clearGuesses(): Sudoku = copy(guesses = mapOf())
+    fun clearEntries(): Sudoku = copy(entries = mapOf())
+    fun clearAll(): Sudoku = this.clearGuesses().clearEntries()
 
     fun findContradictions(): List<Pair<Int, Int>> = this.entries.mapNotNull { (coord, entry) ->
         if (Solver.neighbours[coord]?.any { c -> (this.clues[c] == entry) or (this.entries[c] == entry) }

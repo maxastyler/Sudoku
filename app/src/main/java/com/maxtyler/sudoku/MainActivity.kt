@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -29,24 +30,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-@Composable
-fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel()) {
-    val sudoku by sudokuViewModel.puzzle.collectAsState()
-    val contradictions by sudokuViewModel.contradictions.collectAsState(initial = listOf())
-    val controlState by sudokuViewModel.controlState.collectAsState()
-
-    RunFunctionOnPauseAndResume(onPause = { sudokuViewModel.writeCurrentSave() }, onResume = {})
-
-    SudokuView(
-        sudoku,
-        contradictions,
-        controlState,
-        onCellPressed = { sudokuViewModel.toggleSquare(it) },
-        onEntryPressed = { coord, i -> sudokuViewModel.toggleEntry(coord, i) },
-        onGuessPressed = { coord, i -> sudokuViewModel.toggleGuess(coord, i) },
-    )
 }
 
 @Composable

@@ -35,9 +35,13 @@ class MenuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepo
         viewModelScope.launch(Dispatchers.IO) { puzzleRepository.deleteSave(puzzleSave) }
     }
 
-    suspend fun createPuzzle(): Long? {
+    suspend fun createPuzzle(difficulty: Difficulty): Long? {
         return withContext(Dispatchers.IO) {
-            puzzleRepository.createNewPuzzle(30)?.first()?.id
+            puzzleRepository.createNewPuzzle(difficulty.clues)?.first()?.id
         }
+    }
+
+    enum class Difficulty(val clues: Int) {
+        Easy(50), Medium(40), Hard(30)
     }
 }

@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     private val numberToGenerate: Int = 4
-    private val minSolutions: Int = 28
+    private val minSolutions: Int = 30
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -65,7 +65,9 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
         return puzzle!!
     }
 
-    suspend fun writeSave(puzzleSave: PuzzleSave) {
-        puzzleDao.insertPuzzleSave(puzzleSave.copy(dateWritten = Date.from(Instant.now())))
+    fun writeSave(puzzleSave: PuzzleSave) {
+        scope.launch(Dispatchers.IO) {
+            puzzleDao.insertPuzzleSave(puzzleSave.copy(dateWritten = Date.from(Instant.now())))
+        }
     }
 }
