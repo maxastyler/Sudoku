@@ -4,17 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.maxtyler.sudoku.ui.Main
-import com.maxtyler.sudoku.ui.SudokuViewModel
 import com.maxtyler.sudoku.ui.theme.SudokuTheme
-import com.maxtyler.sudoku.ui.theme.SudokuView
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

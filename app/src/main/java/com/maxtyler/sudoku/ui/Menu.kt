@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,6 +24,7 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
     val saves by menuViewModel.saves.collectAsState(initial = listOf())
     val listState = rememberLazyListState()
     val saveCount by menuViewModel.puzzleCount.collectAsState(0)
+    var deleteAlertState: PuzzleSave? by remember { mutableStateOf(null) }
 
     var scope = rememberCoroutineScope()
     Scaffold(topBar = { SudokuTopBar(playingGame = false) }) {
@@ -67,13 +65,41 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
                             Box(modifier = Modifier.clickable { Log.d("GAMES", "Hi") }) {
                                 SaveView(it, onClicked = {
                                     navHostController.navigate("game/${it.id}/30")
-                                }, onDelete = { menuViewModel.deletePuzzleSave(it) })
+                                }, onDelete = { deleteAlertState = it })
                             }
                         }
                     }
                 }
             }
         }
+    }
+    if (deleteAlertState != null) {
+        AlertDialog(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            onDismissRequest = { deleteAlertState = null },
+            buttons = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    Button(onClick = {
+                        menuViewModel.deletePuzzleSave(deleteAlertState!!)
+                        deleteAlertState = null
+                    }) {
+                        Text("Yes")
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(onClick = { deleteAlertState = null }) {
+                        Text("No")
+                    }
+                }
+            },
+            text = { Text("Really delete this puzzle?") })
     }
 }
 
@@ -86,7 +112,11 @@ fun SaveView(puzzleSave: PuzzleSave, onClicked: () -> Unit = {}, onDelete: () ->
             .padding(10.dp)
             .fillMaxWidth()
             .clickable() { onClicked() }) {
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(10.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.4f)
@@ -98,9 +128,6 @@ fun SaveView(puzzleSave: PuzzleSave, onClicked: () -> Unit = {}, onDelete: () ->
                     controlState = ControlState(null),
                     controlsDisabled = true
                 )
-            }
-            IconButton(onClick = onDelete) {
-
             }
             Button(onClick = onDelete) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = "Delete this puzzle")
