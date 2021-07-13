@@ -13,6 +13,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Instant
+import java.util.*
 
 @RunWith(AndroidJUnit4::class)
 class PuzzleTest {
@@ -75,7 +77,7 @@ class PuzzleTest {
                 .toMap(),
             entries = mapOf(),
             guesses = mapOf(),
-            dateWritten = Date(Instant.now())
+            dateWritten = saves.firstOrNull()?.dateWritten ?: Date.from(Instant.now())
         )
         ), saves
         )
@@ -83,7 +85,10 @@ class PuzzleTest {
 
     @Test
     fun testPuzzleSaveInsertionAndRetrieval() {
-        val puzzle = PuzzleSave(clues = mapOf(), entries = mapOf(), guesses = mapOf())
+        val date = Date.from(Instant.now())
+        val puzzle = PuzzleSave(
+            clues = mapOf(), entries = mapOf(), guesses = mapOf(), dateWritten = date
+        )
         runBlocking {
             puzzleDao.insertPuzzleSave(puzzle)
             puzzleDao.insertPuzzleSave(puzzle)
@@ -96,7 +101,8 @@ class PuzzleTest {
             id = 1,
             clues = mapOf(2 to 3 to 4, 3 to 4 to 5),
             entries = mapOf(1 to 2 to 3, 2 to 0 to 3),
-            guesses = mapOf(2 to 3 to setOf(), 5 to 5 to setOf(2, 3, 4), 1 to 1 to setOf(1))
+            guesses = mapOf(2 to 3 to setOf(), 5 to 5 to setOf(2, 3, 4), 1 to 1 to setOf(1)),
+            dateWritten = date
         )
         runBlocking { puzzleDao.insertPuzzleSave(puzzle2) }
         assertEquals(puzzle2, runBlocking {
