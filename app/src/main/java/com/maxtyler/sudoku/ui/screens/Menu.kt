@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
+import com.maxtyler.sudoku.viewmodels.MenuViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -35,7 +36,7 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
-                Column() {
+                Column(modifier = Modifier.padding(10.dp)) {
                     Text("Start a new game:")
                     MenuViewModel.Difficulty.values().forEach {
                         Button(
@@ -57,7 +58,9 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
             }
             Spacer(modifier = Modifier.height(10.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)) {
                     Text("Continue a previous game:")
                     LazyColumn(state = listState) {
 

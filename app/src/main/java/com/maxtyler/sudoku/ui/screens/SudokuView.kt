@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.ui.BoardView
 import com.maxtyler.sudoku.ui.ControlState
-import com.maxtyler.sudoku.ui.SelectionView
+import com.maxtyler.sudoku.ui.screens.SelectionView
 
 @Composable
 fun SudokuView(

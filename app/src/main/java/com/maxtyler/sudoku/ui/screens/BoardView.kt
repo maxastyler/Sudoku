@@ -6,6 +6,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -110,13 +112,13 @@ fun DrawScope.drawGrid(color: Color = Color.Black, thinWidth: Float = 1f, thickW
     (0..9).forEach {
         val pos = it * lineSpacing
         drawLine(
-            color = Color.Black,
+            color = color,
             start = Offset(0f, pos),
             end = Offset(boardSize, pos),
             strokeWidth = if (it.mod(3) == 0) thickWidth else thinWidth
         )
         drawLine(
-            color = Color.Black,
+            color = color,
             start = Offset(pos, 0f),
             end = Offset(pos, boardSize),
             cap = StrokeCap.Square,
@@ -125,7 +127,15 @@ fun DrawScope.drawGrid(color: Color = Color.Black, thinWidth: Float = 1f, thickW
     }
 }
 
-fun DrawScope.drawNumbers(sudoku: Sudoku, contradictions: List<Pair<Int, Int>>) {
+fun DrawScope.drawNumbers(
+    sudoku: Sudoku,
+    contradictions: List<Pair<Int, Int>>,
+    numberColor: Color = Color(0xff000000),
+    guessColor: Color = Color(0xff000000),
+    clueColor: Color = Color(0xff000000),
+    clueBackground: Color = Color(0xffffffff),
+    contradictionColor: Color = Color(0xffff0000)
+) {
     val paint = Paint()
     paint.textAlign = Paint.Align.CENTER
     paint.isAntiAlias = true
@@ -138,15 +148,21 @@ fun DrawScope.drawNumbers(sudoku: Sudoku, contradictions: List<Pair<Int, Int>>) 
             val coord = row to col
             translate(left = row * lineSpacing, top = col * lineSpacing) {
                 sudoku.clues[coord]?.let { clue ->
-                    drawClue(clue, paint, boxThickness = 1f)
+                    drawClue(
+                        clue,
+                        paint,
+                        textColor = clueColor,
+                        backgroundColor = clueBackground,
+                        boxThickness = 1f
+                    )
                 } ?: sudoku.entries[coord]?.let { entry ->
                     drawEntry(
                         entry,
                         paint,
-                        if (coord in contradictions) Color(0xffff0000) else Color(0xff000000)
+                        if (coord in contradictions) contradictionColor else numberColor
                     )
                 } ?: sudoku.guesses.getOrDefault(coord, setOf()).let { guess ->
-                    drawGuess(guess, paint)
+                    drawGuess(guess, paint, guessColor = guessColor)
                 }
             }
         }
@@ -183,6 +199,14 @@ fun BoardView(
     onCellPressed: (Pair<Int, Int>) -> Unit = {},
     controlsDisabled: Boolean = false
 ) {
+    val backgroundColor = MaterialTheme.colors.background
+    val clueBackgroundColor = Color(0.5f, 0.5f, 0.5f, 0.5f)
+    val clueColor = MaterialTheme.colors.onBackground
+    val numberColor = MaterialTheme.colors.onBackground
+    val guessColor = MaterialTheme.colors.onBackground
+    val errorColor = MaterialTheme.colors.error
+    val lineColor = MaterialTheme.colors.primary
+
     Canvas(modifier = if (controlsDisabled)
         Modifier
             .fillMaxWidth()
@@ -202,10 +226,17 @@ fun BoardView(
                     )
                 })
             }) {
+        this.drawRect(color = backgroundColor)
 
-
-        drawNumbers(sudoku, contradictions)
-        drawGrid()
+        drawNumbers(
+            sudoku, contradictions,
+            numberColor = numberColor,
+            guessColor = guessColor,
+            clueColor = clueColor,
+            clueBackground = clueBackgroundColor,
+            contradictionColor = errorColor
+        )
+        drawGrid(color = lineColor)
         drawSelection(if (controlsDisabled) ControlState() else controlState)
     }
 }

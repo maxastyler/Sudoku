@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.maxtyler.sudoku.RunFunctionOnPauseAndResume
 import com.maxtyler.sudoku.ui.theme.SudokuView
+import com.maxtyler.sudoku.viewmodels.SudokuViewModel
 
 @Composable
 fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel(), onBackToMenu: () -> Unit = {}) {

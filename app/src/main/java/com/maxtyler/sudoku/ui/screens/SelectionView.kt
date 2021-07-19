@@ -1,4 +1,4 @@
-package com.maxtyler.sudoku.ui
+package com.maxtyler.sudoku.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

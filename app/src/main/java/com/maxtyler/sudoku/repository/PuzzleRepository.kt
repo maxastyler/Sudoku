@@ -13,7 +13,9 @@ import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.util.*
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     private val numberToGenerate: Int = 4
     private val minSolutions: Int = 30

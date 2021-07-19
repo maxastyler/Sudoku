@@ -1,4 +1,4 @@
-package com.maxtyler.sudoku.ui
+package com.maxtyler.sudoku.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

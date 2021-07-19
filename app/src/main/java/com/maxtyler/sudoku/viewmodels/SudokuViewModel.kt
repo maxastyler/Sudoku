@@ -1,4 +1,4 @@
-package com.maxtyler.sudoku.ui
+package com.maxtyler.sudoku.viewmodels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.repository.PuzzleRepository
+import com.maxtyler.sudoku.ui.ControlState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

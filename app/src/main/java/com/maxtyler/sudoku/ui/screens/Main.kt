@@ -6,9 +6,9 @@ import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -21,6 +21,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
+import com.maxtyler.sudoku.viewmodels.MenuViewModel
+import com.maxtyler.sudoku.viewmodels.SudokuViewModel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -33,10 +35,7 @@ fun Main() {
     NavHost(navController, "menu") {
         composable("menu") {
             val vm = hiltViewModel<MenuViewModel>()
-            EnterAnimation {
-
-                Menu(vm, navController)
-            }
+            Menu(vm, navController)
         }
         composable(
             "game/{gameId}/{numberOfClues}",
@@ -44,10 +43,7 @@ fun Main() {
                 navArgument("numberOfClues") { type = NavType.IntType })
         ) {
             val vm = hiltViewModel<SudokuViewModel>()
-            EnterAnimation {
-
-                SudokuScreen(vm, { navController.navigateUp() })
-            }
+            SudokuScreen(vm, { navController.navigateUp() })
         }
     }
 }
@@ -119,7 +115,8 @@ fun EnterAnimation(content: @Composable () -> Unit) {
         remember { MutableTransitionState(false) }.also { it.targetState = true }
     AnimatedVisibility(
         visibleState = transitionState,
-        enter = fadeIn()
+        enter = slideInHorizontally(),
+        exit = slideOutHorizontally(),
     ) {
         content()
     }
