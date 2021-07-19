@@ -192,7 +192,7 @@ fun DrawScope.drawSelection(
 
 @Composable
 fun BoardView(
-    sudoku: Sudoku,
+    sudoku: Sudoku?,
     contradictions: List<Pair<Int, Int>>,
     controlState: ControlState,
     onCellPressed: (Pair<Int, Int>) -> Unit = {},
@@ -226,15 +226,16 @@ fun BoardView(
                 })
             }) {
         this.drawRect(color = backgroundColor)
-
-        drawNumbers(
-            sudoku, contradictions,
-            numberColor = numberColor,
-            guessColor = guessColor,
-            clueColor = clueColor,
-            clueBackground = clueBackgroundColor,
-            contradictionColor = errorColor
-        )
+        sudoku?.let {
+            drawNumbers(
+                it, contradictions,
+                numberColor = numberColor,
+                guessColor = guessColor,
+                clueColor = clueColor,
+                clueBackground = clueBackgroundColor,
+                contradictionColor = errorColor
+            )
+        }
         drawGrid(color = lineColor)
         drawSelection(if (controlsDisabled) ControlState() else controlState)
     }

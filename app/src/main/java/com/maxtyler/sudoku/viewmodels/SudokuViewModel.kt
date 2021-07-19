@@ -8,6 +8,7 @@ import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.repository.PuzzleRepository
 import com.maxtyler.sudoku.ui.ControlState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -23,14 +24,18 @@ class SudokuViewModel @Inject constructor(
     ViewModel() {
     private var numberOfClues: Int = 30
     private var puzzleSave: PuzzleSave? = null
-    private val _puzzle: MutableStateFlow<Sudoku> = MutableStateFlow(Sudoku())
-    val puzzle = _puzzle.asStateFlow()
+    private val _puzzles: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
+    val puzzles = _puzzles.asStateFlow()
+    private val _redoQueue: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
+    val redoQueue = _redoQueue.asStateFlow()
+
+    //    private val _puzzle: MutableStateFlow<Sudoku> = MutableStateFlow(Sudoku())
+    val puzzle = _puzzles.map { it.lastOrNull() }
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
     val controlState = _controlState.asStateFlow()
-    val completed: Flow<Boolean> = _puzzle.map { it.completed() }
+    val completed: Flow<Boolean> = puzzle.map { it?.completed() ?: false }
 
-
-    val contradictions = _puzzle.mapLatest { it.findContradictions() }
+    val contradictions = puzzle.mapLatest { it?.findContradictions() ?: listOf() }
 
     private var puzzleJob: Job? = null
 
@@ -48,11 +53,11 @@ class SudokuViewModel @Inject constructor(
         puzzleJob = viewModelScope.launch {
             puzzleRepository.createNewPuzzle(numberFilled)?.collectLatest {
                 puzzleSave = it
-                _puzzle.emit(
+                setPuzzle(
                     Sudoku(
-                        clues = it.clues,
-                        entries = it.entries,
-                        guesses = it.guesses
+                        clues = it.clues.toPersistentMap(),
+                        entries = it.entries.toPersistentMap(),
+                        guesses = it.guesses.toPersistentMap(),
                     )
                 )
             }
@@ -65,11 +70,11 @@ class SudokuViewModel @Inject constructor(
             puzzleRepository.getPuzzle(puzzleId).flowOn(Dispatchers.IO).filterNotNull()
                 .collectLatest {
                     puzzleSave = it
-                    _puzzle.emit(
+                    setPuzzle(
                         Sudoku(
-                            clues = it.clues,
-                            entries = it.entries,
-                            guesses = it.guesses
+                            clues = it.clues.toPersistentMap(),
+                            entries = it.entries.toPersistentMap(),
+                            guesses = it.guesses.toPersistentMap(),
                         )
                     )
                 }
@@ -78,44 +83,82 @@ class SudokuViewModel @Inject constructor(
 
     fun setNewPuzzle(puzzle: Sudoku) {
         _controlState.value = ControlState()
-        _puzzle.value = puzzle
+        setPuzzle(puzzle)
     }
 
     fun toggleEntry(coord: Pair<Int, Int>, entry: Int) {
-        _puzzle.value.toggleEntry(coord, entry)?.let {
-            it.completed()
-            _puzzle.value = it
+        _puzzles.value.lastOrNull()?.toggleEntry(coord, entry)?.let {
+            setPuzzle(it)
         }
     }
 
     fun toggleGuess(coord: Pair<Int, Int>, guess: Int) =
-        _puzzle.value.toggleGuess(coord, guess)?.let {
-            _puzzle.value = it
+        _puzzles.value.lastOrNull()?.toggleGuess(coord, guess)?.let {
+            setPuzzle(it)
         }
 
+    fun clearAllEntries() {
+        _puzzles.value.lastOrNull()?.let {
+            setPuzzle(it.clearEntries())
+        }
+    }
+
+    fun clearAllGuesses() {
+        _puzzles.value.lastOrNull()?.let {
+            setPuzzle(it.clearGuesses())
+        }
+    }
+
     fun clearAllValues() {
-        _puzzle.value = _puzzle.value.clearAll()
+        _puzzles.value.lastOrNull()?.let {
+            setPuzzle(it.clearAll())
+        }
+    }
+
+    fun setPuzzle(sudoku: Sudoku) {
+        if (sudoku != _puzzles.value.lastOrNull()) {
+            _puzzles.value = _puzzles.value + sudoku
+            _redoQueue.value = listOf()
+        }
     }
 
     fun toggleSquare(square: Pair<Int, Int>) {
         when {
             (square.first < 0) or (square.first > 8) or (square.second < 0) or (square.second > 8) -> Unit
-            square in _puzzle.value.clues.keys -> Unit
+            _puzzles.value.lastOrNull()?.clues?.keys?.let { square in it } ?: false -> Unit
             _controlState.value.selected == square -> _controlState.value =
                 _controlState.value.copy(selected = null)
             else -> _controlState.value = _controlState.value.copy(selected = square)
         }
     }
 
-    fun writeCurrentSave() = puzzleSave?.let {
-        puzzleRepository.writeSave(
-            it.copy(
-                clues = _puzzle.value.clues,
-                entries = _puzzle.value.entries.filterValues { it != null }
-                    .mapValues { (_, v) -> v!! },
-                guesses = _puzzle.value.guesses,
-                completed = runBlocking { completed.first() }
+    fun writeCurrentSave() = puzzleSave?.let { ps ->
+        _puzzles.value.lastOrNull()?.let {
+            puzzleRepository.writeSave(
+                ps.copy(
+                    clues = it.clues,
+                    entries = it.entries.filterValues { it != null }
+                        .mapValues { (_, v) -> v!! }.toPersistentMap(),
+                    guesses = it.guesses,
+                    completed = runBlocking { completed.first() }
+                )
             )
-        )
+        }
+    }
+
+    fun undo() {
+        if (_puzzles.value.count() > 1) {
+            _puzzles.value.lastOrNull()?.let { last ->
+                _redoQueue.value += last
+                _puzzles.value = _puzzles.value.dropLast(1)
+            }
+        }
+    }
+
+    fun redo() {
+        _redoQueue.value.lastOrNull()?.let { last ->
+            _puzzles.value += last
+            _redoQueue.value = _redoQueue.value.dropLast(1)
+        }
     }
 }

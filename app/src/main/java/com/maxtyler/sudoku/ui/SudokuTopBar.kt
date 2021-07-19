@@ -12,7 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun SudokuTopBar(playingGame: Boolean, onClearAllValues: (() -> Unit) -> Unit = {}) {
+fun SudokuTopBar(
+    playingGame: Boolean,
+    onClearAllValues: (() -> Unit) -> Unit = { it() },
+    onClearGuesses: (() -> Unit) -> Unit = { it() },
+    onClearEntries: (() -> Unit) -> Unit = { it() },
+    onControls: (() -> Unit) -> Unit = { it() },
+) {
     var dropDownExpanded = remember { mutableStateOf(false) }
     TopAppBar(title = { Text("Sudoku") }, actions = {
         Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
@@ -22,14 +28,30 @@ fun SudokuTopBar(playingGame: Boolean, onClearAllValues: (() -> Unit) -> Unit = 
             DropdownMenu(
                 expanded = dropDownExpanded.value,
                 onDismissRequest = { dropDownExpanded.value = false }) {
+                DropdownMenuItem(onClick = {
+                    onControls({ dropDownExpanded.value = false })
+                }) {
+                    Text("Controls help")
+                }
                 if (playingGame) {
+                    Divider()
+                    DropdownMenuItem(onClick = {
+                        onClearGuesses({ dropDownExpanded.value = false })
+                    }) {
+                        Text("Clear all guesses")
+                    }
+                    DropdownMenuItem(onClick = {
+                        onClearEntries({ dropDownExpanded.value = false })
+                    }) {
+                        Text("Clear all entries")
+                    }
                     DropdownMenuItem(onClick = {
                         onClearAllValues({
                             dropDownExpanded.value = false
                         })
                     })
                     {
-                        Text("Clear all values")
+                        Text("Clear everything")
                     }
                 }
             }

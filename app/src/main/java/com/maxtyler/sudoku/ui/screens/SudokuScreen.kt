@@ -17,11 +17,17 @@ import com.maxtyler.sudoku.ui.theme.SudokuView
 import com.maxtyler.sudoku.viewmodels.SudokuViewModel
 
 @Composable
-fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel(), onBackToMenu: () -> Unit = {}) {
-    val sudoku by sudokuViewModel.puzzle.collectAsState()
+fun SudokuScreen(
+    sudokuViewModel: SudokuViewModel = viewModel(),
+    onBackToMenu: () -> Unit = {},
+    onControlHelp: (() -> Unit) -> Unit = { it() }
+) {
+    val sudoku by sudokuViewModel.puzzle.collectAsState(null)
     val contradictions by sudokuViewModel.contradictions.collectAsState(initial = listOf())
     val controlState by sudokuViewModel.controlState.collectAsState()
     val completed by sudokuViewModel.completed.collectAsState(initial = false)
+    val puzzles by sudokuViewModel.puzzles.collectAsState()
+    val redo by sudokuViewModel.redoQueue.collectAsState()
 
     RunFunctionOnPauseAndResume(onPause = { sudokuViewModel.writeCurrentSave() }, onResume = {})
     Scaffold(topBar = {
@@ -30,7 +36,17 @@ fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel(), onBackToMenu: (
             onClearAllValues = {
                 sudokuViewModel.clearAllValues()
                 it()
-            })
+            },
+            onClearGuesses = {
+                sudokuViewModel.clearAllGuesses()
+                it()
+            },
+            onClearEntries = {
+                sudokuViewModel.clearAllEntries()
+                it()
+            },
+            onControls = onControlHelp,
+        )
     }) {
         SudokuView(
             sudoku,
@@ -39,6 +55,10 @@ fun SudokuScreen(sudokuViewModel: SudokuViewModel = viewModel(), onBackToMenu: (
             onCellPressed = { sudokuViewModel.toggleSquare(it) },
             onEntryPressed = { coord, i -> sudokuViewModel.toggleEntry(coord, i) },
             onGuessPressed = { coord, i -> sudokuViewModel.toggleGuess(coord, i) },
+            onUndoPressed = sudokuViewModel::undo,
+            onRedoPressed = sudokuViewModel::redo,
+            undoEnabled = puzzles.count() > 1,
+            redoEnabled = redo.count() > 0,
             controlsDisabled = completed,
         )
         if (completed) {

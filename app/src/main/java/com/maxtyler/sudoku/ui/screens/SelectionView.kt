@@ -45,16 +45,28 @@ fun SelectionView(
     entry: Int?,
     guess: Set<Int>,
     onEntryPressed: (Int) -> Unit = {},
-    onGuessPressed: (Int) -> Unit = {}
+    onGuessPressed: (Int) -> Unit = {},
+    onUndoPressed: () -> Unit = {},
+    onRedoPressed: () -> Unit = {},
+    undoEnabled: Boolean = true,
+    redoEnabled: Boolean = true,
 ) {
-    Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.SpaceBetween) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Entry")
-            NumberGrid(entry?.let { setOf(it) } ?: setOf(), onEntryPressed)
+    Row() {
+        Button(onClick = onUndoPressed, enabled = undoEnabled) {
+            Text("Undo")
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Guess")
-            NumberGrid(guess, onGuessPressed)
+        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Entry")
+                NumberGrid(entry?.let { setOf(it) } ?: setOf(), onEntryPressed)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Guess")
+                NumberGrid(guess, onGuessPressed)
+            }
+        }
+        Button(onClick = onRedoPressed, enabled = redoEnabled) {
+            Text("Redo")
         }
     }
 }

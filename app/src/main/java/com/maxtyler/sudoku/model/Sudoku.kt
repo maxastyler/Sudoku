@@ -1,9 +1,14 @@
 package com.maxtyler.sudoku.model
 
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.minus
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.plus
+
 data class Sudoku(
-    val clues: Map<Pair<Int, Int>, Int> = mapOf(),
-    val entries: Map<Pair<Int, Int>, Int?> = mapOf(),
-    val guesses: Map<Pair<Int, Int>, Set<Int>> = mapOf()
+    val clues: PersistentMap<Pair<Int, Int>, Int> = persistentMapOf(),
+    val entries: PersistentMap<Pair<Int, Int>, Int?> = persistentMapOf(),
+    val guesses: PersistentMap<Pair<Int, Int>, Set<Int>> = persistentMapOf(),
 ) {
     fun completed(): Boolean =
         ((entries.filterValues { it != null } + clues).count() >= 81) and findContradictions().isEmpty()
@@ -32,8 +37,8 @@ data class Sudoku(
 
     fun clearGuess(coord: Pair<Int, Int>): Sudoku = copy(guesses = this.guesses - coord)
 
-    fun clearGuesses(): Sudoku = copy(guesses = mapOf())
-    fun clearEntries(): Sudoku = copy(entries = mapOf())
+    fun clearGuesses(): Sudoku = copy(guesses = persistentMapOf())
+    fun clearEntries(): Sudoku = copy(entries = persistentMapOf())
     fun clearAll(): Sudoku = this.clearGuesses().clearEntries()
 
     fun findContradictions(): List<Pair<Int, Int>> = this.entries.mapNotNull { (coord, entry) ->
@@ -45,5 +50,4 @@ data class Sudoku(
         private fun inBounds(coord: Pair<Int, Int>): Boolean =
             (coord.first >= 0) and (coord.first <= 8) and (coord.second >= 0) and (coord.second <= 8)
     }
-
 }

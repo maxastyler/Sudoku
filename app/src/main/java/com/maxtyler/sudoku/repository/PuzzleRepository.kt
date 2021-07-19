@@ -5,6 +5,7 @@ import com.maxtyler.sudoku.database.PuzzleDao
 import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Solver
 import com.maxtyler.sudoku.model.Sudoku
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -47,7 +48,11 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     }
 
     private fun puzzleSaveToSudoku(puzzleSave: PuzzleSave): Sudoku =
-        Sudoku(clues = puzzleSave.clues, entries = puzzleSave.entries, guesses = puzzleSave.guesses)
+        Sudoku(
+            clues = puzzleSave.clues.toPersistentMap(),
+            entries = puzzleSave.entries.toPersistentMap(),
+            guesses = puzzleSave.guesses.toPersistentMap()
+        )
 
     suspend fun createNewPuzzle(clueNumber: Int): Flow<PuzzleSave>? {
         val puzzle = puzzleDao.getFirstGeneratedPuzzleFlow().filterNotNull().first()

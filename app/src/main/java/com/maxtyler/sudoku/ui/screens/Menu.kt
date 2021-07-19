@@ -18,17 +18,22 @@ import androidx.navigation.NavHostController
 import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.viewmodels.MenuViewModel
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.launch
 
 @Composable
-fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostController) {
+fun Menu(
+    menuViewModel: MenuViewModel = viewModel(),
+    navHostController: NavHostController,
+    onControlHelp: (() -> Unit) -> Unit = { it() }
+) {
     val saves by menuViewModel.saves.collectAsState(initial = listOf())
     val listState = rememberLazyListState()
     val saveCount by menuViewModel.puzzleCount.collectAsState(0)
     var deleteAlertState: PuzzleSave? by remember { mutableStateOf(null) }
 
-    var scope = rememberCoroutineScope()
-    Scaffold(topBar = { SudokuTopBar(playingGame = false) }) {
+    val scope = rememberCoroutineScope()
+    Scaffold(topBar = { SudokuTopBar(playingGame = false, onControls = onControlHelp) }) {
         Column(
             modifier = Modifier
                 .padding(10.dp)
@@ -111,7 +116,11 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
 @Composable
 fun SaveView(puzzleSave: PuzzleSave, onClicked: () -> Unit = {}, onDelete: () -> Unit = {}) {
     val sudoku =
-        Sudoku(clues = puzzleSave.clues, entries = puzzleSave.entries, guesses = puzzleSave.guesses)
+        Sudoku(
+            clues = puzzleSave.clues.toPersistentMap(),
+            entries = puzzleSave.entries.toPersistentMap(),
+            guesses = puzzleSave.guesses.toPersistentMap()
+        )
     Card(
         modifier = Modifier
             .padding(10.dp)

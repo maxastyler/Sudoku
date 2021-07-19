@@ -62,6 +62,7 @@ dependencies {
 
     // hilt stuff
     implementation("com.google.dagger:hilt-android:${rootProject.extra["hilt_version"]}")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
     kapt("com.google.dagger:hilt-android-compiler:${rootProject.extra["hilt_version"]}")
 
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0-alpha03")
@@ -73,10 +74,6 @@ dependencies {
 
     // serialisation
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
-
-    // paging
-    implementation("androidx.paging:paging-runtime:${rootProject.extra["paging_version"]}")
-    implementation("androidx.paging:paging-compose:1.0.0-alpha11")
 
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
@@ -94,7 +91,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:${rootProject.extra["lifecycle_version"]}")
     kapt("androidx.lifecycle:lifecycle-compiler:${rootProject.extra["lifecycle_version"]}")
 
-    implementation("androidx.activity:activity-compose:1.3.0-rc01")
+    implementation("androidx.activity:activity-compose:${rootProject.extra["compose_version"]}")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
     testImplementation("junit:junit:4.+")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
