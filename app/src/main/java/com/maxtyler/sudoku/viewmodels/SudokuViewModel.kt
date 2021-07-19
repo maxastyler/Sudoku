@@ -1,5 +1,7 @@
 package com.maxtyler.sudoku.viewmodels
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,9 +21,12 @@ import javax.inject.Inject
 @HiltViewModel
 class SudokuViewModel @Inject constructor(
     private val puzzleRepository: PuzzleRepository,
+    private val vibrator: Vibrator,
     savedStateHandle: SavedStateHandle
 ) :
     ViewModel() {
+    private var vibrationJob: Job? = null
+    private var vibrationEffect = VibrationEffect.createOneShot(100L, 200)
     private var numberOfClues: Int = 30
     private var puzzleSave: PuzzleSave? = null
     private val _puzzles: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
@@ -29,7 +34,6 @@ class SudokuViewModel @Inject constructor(
     private val _redoQueue: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
     val redoQueue = _redoQueue.asStateFlow()
 
-    //    private val _puzzle: MutableStateFlow<Sudoku> = MutableStateFlow(Sudoku())
     val puzzle = _puzzles.map { it.lastOrNull() }
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
     val controlState = _controlState.asStateFlow()
@@ -88,6 +92,7 @@ class SudokuViewModel @Inject constructor(
 
     fun toggleEntry(coord: Pair<Int, Int>, entry: Int) {
         _puzzles.value.lastOrNull()?.toggleEntry(coord, entry)?.let {
+            vibrate(vibrationEffect)
             setPuzzle(it)
         }
     }
@@ -165,6 +170,14 @@ class SudokuViewModel @Inject constructor(
         _redoQueue.value.lastOrNull()?.let { last ->
             _puzzles.value += last
             _redoQueue.value = _redoQueue.value.dropLast(1)
+        }
+    }
+
+    fun vibrate(effect: VibrationEffect) {
+        if (vibrationJob?.isActive != true) {
+            vibrationJob = viewModelScope.launch(Dispatchers.Default) {
+                vibrator.vibrate(effect)
+            }
         }
     }
 }
