@@ -125,19 +125,23 @@ fun SelectionView(
             Text("UNDO")
         }
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Input")
-                NumberGrid(entry?.let { setOf(it) } ?: guess,
-                    onItemPressed = onGuessPressed,
-                    onLongItemPressed = onEntryPressed)
-            }
-            Spacer(modifier = Modifier.height(14.dp))
-            Button(onClick = onCleanGuessesPressed) {
-                Text("CLEAN GUESSES")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Input")
+                    NumberGrid(entry?.let { setOf(it) } ?: guess,
+                        onItemPressed = onGuessPressed,
+                        onLongItemPressed = onEntryPressed)
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+                Button(onClick = onCleanGuessesPressed) {
+                    Text("CLEAN GUESSES")
+                }
             }
             Spacer(modifier = Modifier.height(14.dp))
             Button(onClick = onControlHelpPressed) {
