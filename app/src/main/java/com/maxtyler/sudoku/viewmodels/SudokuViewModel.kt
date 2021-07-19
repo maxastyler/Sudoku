@@ -103,6 +103,12 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    fun cleanGuesses() {
+        _puzzles.value.lastOrNull()?.let {
+            setPuzzle(it.cleanAllGuesses())
+        }
+    }
+
     fun clearAllGuesses() {
         _puzzles.value.lastOrNull()?.let {
             setPuzzle(it.clearGuesses())

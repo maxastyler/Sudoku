@@ -37,6 +37,21 @@ data class Sudoku(
 
     fun clearGuess(coord: Pair<Int, Int>): Sudoku = copy(guesses = this.guesses - coord)
 
+    fun cleanAllGuesses(): Sudoku {
+        val newGuesses =
+            (this.clues + this.entries.mapNotNull { (c, e) -> e?.let { c to it } }).toList()
+                .fold(this.guesses, { gs, (c, e) ->
+                    Solver.neighbours[c]?.let { neighbours ->
+                        gs + neighbours.mapNotNull {
+                            gs[it]?.let { s ->
+                                it to (s - e)
+                            }
+                        }
+                    } ?: gs
+                })
+        return copy(guesses = newGuesses)
+    }
+
     fun clearGuesses(): Sudoku = copy(guesses = persistentMapOf())
     fun clearEntries(): Sudoku = copy(entries = persistentMapOf())
     fun clearAll(): Sudoku = this.clearGuesses().clearEntries()

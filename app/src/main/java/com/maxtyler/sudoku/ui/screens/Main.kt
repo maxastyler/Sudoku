@@ -1,6 +1,7 @@
 package com.maxtyler.sudoku.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -12,6 +13,7 @@ import com.maxtyler.sudoku.ui.screens.ControlsScreen
 import com.maxtyler.sudoku.viewmodels.MenuViewModel
 import com.maxtyler.sudoku.viewmodels.SudokuViewModel
 
+@ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @Composable
 fun Main() {
@@ -35,7 +37,6 @@ fun Main() {
                 { navController.navigateUp() },
                 onControlHelp = {
                     navController.navigate("controls")
-                    it()
                 })
         }
         composable("controls") {

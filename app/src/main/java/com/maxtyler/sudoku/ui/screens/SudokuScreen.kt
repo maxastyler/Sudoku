@@ -1,5 +1,6 @@
 package com.maxtyler.sudoku.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Card
@@ -16,11 +17,12 @@ import com.maxtyler.sudoku.RunFunctionOnPauseAndResume
 import com.maxtyler.sudoku.ui.theme.SudokuView
 import com.maxtyler.sudoku.viewmodels.SudokuViewModel
 
+@ExperimentalFoundationApi
 @Composable
 fun SudokuScreen(
     sudokuViewModel: SudokuViewModel = viewModel(),
     onBackToMenu: () -> Unit = {},
-    onControlHelp: (() -> Unit) -> Unit = { it() }
+    onControlHelp: () -> Unit = { }
 ) {
     val sudoku by sudokuViewModel.puzzle.collectAsState(null)
     val contradictions by sudokuViewModel.contradictions.collectAsState(initial = listOf())
@@ -45,7 +47,10 @@ fun SudokuScreen(
                 sudokuViewModel.clearAllEntries()
                 it()
             },
-            onControls = onControlHelp,
+            onControls = {
+                onControlHelp()
+                it()
+            },
         )
     }) {
         SudokuView(
@@ -57,6 +62,8 @@ fun SudokuScreen(
             onGuessPressed = { coord, i -> sudokuViewModel.toggleGuess(coord, i) },
             onUndoPressed = sudokuViewModel::undo,
             onRedoPressed = sudokuViewModel::redo,
+            onCleanGuessesPressed = sudokuViewModel::cleanGuesses,
+            onControlHelp = onControlHelp,
             undoEnabled = puzzles.count() > 1,
             redoEnabled = redo.count() > 0,
             controlsDisabled = completed,

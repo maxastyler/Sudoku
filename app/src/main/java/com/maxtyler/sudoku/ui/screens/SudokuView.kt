@@ -1,5 +1,6 @@
 package com.maxtyler.sudoku.ui.theme
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -13,6 +14,7 @@ import com.maxtyler.sudoku.ui.BoardView
 import com.maxtyler.sudoku.ui.ControlState
 import com.maxtyler.sudoku.ui.screens.SelectionView
 
+@ExperimentalFoundationApi
 @Composable
 fun SudokuView(
     sudoku: Sudoku?,
@@ -21,8 +23,10 @@ fun SudokuView(
     onCellPressed: (Pair<Int, Int>) -> Unit = {},
     onEntryPressed: (Pair<Int, Int>, Int) -> Unit = { _, _ -> Unit },
     onGuessPressed: (Pair<Int, Int>, Int) -> Unit = { _, _ -> Unit },
+    onControlHelp: () -> Unit = {},
     onUndoPressed: () -> Unit = {},
     onRedoPressed: () -> Unit = {},
+    onCleanGuessesPressed: () -> Unit = {},
     undoEnabled: Boolean = true,
     redoEnabled: Boolean = true,
     controlsDisabled: Boolean = false,
@@ -53,8 +57,10 @@ fun SudokuView(
                 onGuessPressed = coord?.let { { i -> onGuessPressed(coord, i) } } ?: {},
                 onUndoPressed = onUndoPressed,
                 onRedoPressed = onRedoPressed,
+                onControlHelpPressed = onControlHelp,
                 undoEnabled = undoEnabled,
                 redoEnabled = redoEnabled,
+                onCleanGuessesPressed = onCleanGuessesPressed,
             )
         }
     }
