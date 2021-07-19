@@ -58,9 +58,11 @@ fun Menu(menuViewModel: MenuViewModel = viewModel(), navHostController: NavHostC
             }
             Spacer(modifier = Modifier.height(10.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                ) {
                     Text("Continue a previous game:")
                     LazyColumn(state = listState) {
 
