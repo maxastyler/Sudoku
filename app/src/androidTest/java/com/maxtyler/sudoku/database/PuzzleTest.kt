@@ -13,6 +13,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 
@@ -72,12 +73,14 @@ class PuzzleTest {
             )?.first()
         })
         val saves = runBlocking { puzzleDao.getPuzzleSaves().first() }
-        assertEquals(listOf(PuzzleSave(id = puzzle.id,
+        assertEquals(listOf(PuzzleSave(
+            id = puzzle.id,
             clues = puzzle.clues.take(9 * 9 - toRemove).map { (a, b, c) -> Pair(a, b) to c.toInt() }
                 .toMap(),
             entries = mapOf(),
             guesses = mapOf(),
-            dateWritten = saves.firstOrNull()?.dateWritten ?: Date.from(Instant.now())
+            dateWritten = saves.firstOrNull()?.dateWritten ?: Date.from(Instant.now()),
+            puzzleTime = Duration.ZERO,
         )
         ), saves
         )
@@ -87,7 +90,11 @@ class PuzzleTest {
     fun testPuzzleSaveInsertionAndRetrieval() {
         val date = Date.from(Instant.now())
         val puzzle = PuzzleSave(
-            clues = mapOf(), entries = mapOf(), guesses = mapOf(), dateWritten = date
+            clues = mapOf(),
+            entries = mapOf(),
+            guesses = mapOf(),
+            dateWritten = date,
+            puzzleTime = Duration.ZERO,
         )
         runBlocking {
             puzzleDao.insertPuzzleSave(puzzle)
@@ -102,7 +109,8 @@ class PuzzleTest {
             clues = mapOf(2 to 3 to 4, 3 to 4 to 5),
             entries = mapOf(1 to 2 to 3, 2 to 0 to 3),
             guesses = mapOf(2 to 3 to setOf(), 5 to 5 to setOf(2, 3, 4), 1 to 1 to setOf(1)),
-            dateWritten = date
+            dateWritten = date,
+            puzzleTime = Duration.ZERO,
         )
         runBlocking { puzzleDao.insertPuzzleSave(puzzle2) }
         assertEquals(puzzle2, runBlocking {

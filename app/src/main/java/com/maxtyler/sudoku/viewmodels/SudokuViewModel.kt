@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
+import com.maxtyler.sudoku.model.Timer
 import com.maxtyler.sudoku.repository.PuzzleRepository
 import com.maxtyler.sudoku.ui.ControlState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,12 +33,14 @@ class SudokuViewModel @Inject constructor(
     private val _puzzles: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
     private val _redoQueue: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
+    private val timer = Timer(viewModelScope)
 
     val puzzles = _puzzles.asStateFlow()
     val redoQueue = _redoQueue.asStateFlow()
     val puzzle = _puzzles.map { it.lastOrNull() }
     val controlState = _controlState.asStateFlow()
     val completed: Flow<Boolean> = puzzle.map { it?.completed() ?: false }
+    val time = timer.duration
 
     val contradictions = puzzle.mapLatest { it?.findContradictions() ?: listOf() }
 
@@ -48,6 +51,44 @@ class SudokuViewModel @Inject constructor(
         savedStateHandle.get<Long>("gameId")?.let {
             loadPuzzle(it)
         } ?: run { getNewPuzzle(numberOfClues) }
+
+        //
+        viewModelScope.launch {
+            completed.collect {
+                when (it) {
+                    true -> timer.stopTimer()
+                    false -> timer.startTimer()
+                }
+            }
+        }
+    }
+
+    fun controlTimerWithCompletionState() {
+        viewModelScope.launch {
+            completed.collect {
+                when (it) {
+                    true -> timer.stopTimer()
+                    false -> timer.startTimer()
+                }
+            }
+        }
+    }
+
+    /**
+     * Incorporate the given puzzle save into this viewmodel
+     * @param s The save
+     */
+    fun setFromPuzzleSave(s: PuzzleSave) {
+        puzzleSave = s
+        timer.setTime(s.puzzleTime)
+        timer.startTimer()
+        setNewPuzzle(
+            Sudoku(
+                clues = s.clues.toPersistentMap(),
+                entries = s.entries.toPersistentMap(),
+                guesses = s.guesses.toPersistentMap(),
+            )
+        )
     }
 
     /**
@@ -56,19 +97,8 @@ class SudokuViewModel @Inject constructor(
      */
     fun getNewPuzzle(numberFilled: Int) {
         puzzleJob?.cancel()
-        puzzleSave = null
-
         puzzleJob = viewModelScope.launch {
-            puzzleRepository.createNewPuzzle(numberFilled)?.collectLatest {
-                puzzleSave = it
-                setPuzzle(
-                    Sudoku(
-                        clues = it.clues.toPersistentMap(),
-                        entries = it.entries.toPersistentMap(),
-                        guesses = it.guesses.toPersistentMap(),
-                    )
-                )
-            }
+            puzzleRepository.createNewPuzzle(numberFilled)?.collectLatest { setFromPuzzleSave(it) }
         }
     }
 
@@ -80,16 +110,7 @@ class SudokuViewModel @Inject constructor(
         puzzleJob?.cancel()
         puzzleJob = viewModelScope.launch {
             puzzleRepository.getPuzzle(puzzleId).flowOn(Dispatchers.IO).filterNotNull()
-                .collectLatest {
-                    puzzleSave = it
-                    setPuzzle(
-                        Sudoku(
-                            clues = it.clues.toPersistentMap(),
-                            entries = it.entries.toPersistentMap(),
-                            guesses = it.guesses.toPersistentMap(),
-                        )
-                    )
-                }
+                .collectLatest { setFromPuzzleSave(it) }
         }
     }
 
@@ -196,7 +217,8 @@ class SudokuViewModel @Inject constructor(
                     entries = it.entries.filterValues { it != null }
                         .mapValues { (_, v) -> v!! }.toPersistentMap(),
                     guesses = it.guesses,
-                    completed = runBlocking { completed.first() }
+                    completed = runBlocking { completed.first() },
+                    puzzleTime = timer.time
                 )
             )
         }
@@ -239,6 +261,7 @@ class SudokuViewModel @Inject constructor(
      * Function to run when the activity is paused. Writes a save and stops the timer
      */
     fun onPause() {
+        timer.stopTimer()
         writeCurrentSave()
     }
 
@@ -246,6 +269,6 @@ class SudokuViewModel @Inject constructor(
      * Function to run when the activity is resumed. Restarts the timer.
      */
     fun onResume() {
-
+        timer.startTimer()
     }
 }

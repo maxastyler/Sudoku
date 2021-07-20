@@ -30,8 +30,12 @@ fun SudokuScreen(
     val completed by sudokuViewModel.completed.collectAsState(initial = false)
     val puzzles by sudokuViewModel.puzzles.collectAsState()
     val redo by sudokuViewModel.redoQueue.collectAsState()
+    val time by sudokuViewModel.time.collectAsState()
 
-    RunFunctionOnPauseAndResume(onPause = { sudokuViewModel.writeCurrentSave() }, onResume = {})
+    RunFunctionOnPauseAndResume(
+        onPause = sudokuViewModel::onPause,
+        onResume = sudokuViewModel::onResume
+    )
     Scaffold(topBar = {
         SudokuTopBar(
             playingGame = !completed,
@@ -67,6 +71,7 @@ fun SudokuScreen(
             undoEnabled = puzzles.count() > 1,
             redoEnabled = redo.count() > 0,
             controlsDisabled = completed,
+            time = time,
         )
         if (completed) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.Duration
 import java.util.*
 
 class SudokuConverters {
@@ -32,6 +33,15 @@ class SudokuConverters {
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? {
         return value?.let { Date(it) }
+    }
+
+    @TypeConverter
+    fun fromDuration(value: Duration): String = "${value.seconds}:${value.nano}"
+
+    @TypeConverter
+    fun toDuration(value: String): Duration {
+        val (s, n) = value.split(":")
+        return Duration.ofSeconds(s.toLongOrNull() ?: 0, n.toLongOrNull() ?: 0)
     }
 
     @TypeConverter

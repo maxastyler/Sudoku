@@ -2,6 +2,7 @@ package com.maxtyler.sudoku.database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 
@@ -15,9 +16,6 @@ interface PuzzleDao {
 
     @Query("SELECT * from GeneratedPuzzle ORDER BY id ASC LIMIT 1")
     fun getFirstGeneratedPuzzleFlow(): Flow<GeneratedPuzzle?>
-
-//    @Query("SELECT * from GeneratedPuzzle ORDER BY id ASC LIMIT 1")
-//    fun getFirstGeneratedPuzzle(): GeneratedPuzzle?
 
     @Query("SELECT * from GeneratedPuzzle")
     fun getGeneratedPuzzles(): Flow<List<GeneratedPuzzle>>
@@ -63,7 +61,8 @@ interface PuzzleDao {
                             .toMap(),
                         entries = mapOf(),
                         guesses = mapOf(),
-                        dateWritten = Date.from(Instant.now()))
+                        dateWritten = Date.from(Instant.now()),
+                        puzzleTime = Duration.ZERO)
                 val puzzleId = insertPuzzleSave(save)
                 getPuzzleSave(puzzleId)
             }
