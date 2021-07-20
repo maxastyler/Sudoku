@@ -94,7 +94,7 @@ class PuzzleTest {
             puzzleDao.insertPuzzleSave(puzzle)
             assertEquals(1, puzzleDao.insertPuzzleSave(puzzle.copy(id = 1)))
         }
-        assertEquals(runBlocking() {
+        assertEquals(runBlocking {
             puzzleDao.getPuzzleSaves().first().size
         }, 2)
         val puzzle2 = PuzzleSave(
