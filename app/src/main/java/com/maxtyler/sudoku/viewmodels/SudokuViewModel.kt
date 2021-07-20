@@ -9,7 +9,7 @@ import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.model.Timer
 import com.maxtyler.sudoku.repository.PuzzleRepository
-import com.maxtyler.sudoku.ui.ControlState
+import com.maxtyler.sudoku.ui.utils.ControlState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.Dispatchers
@@ -33,13 +33,16 @@ class SudokuViewModel @Inject constructor(
     private val _puzzles: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
     private val _redoQueue: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
-    private val timer = Timer(viewModelScope)
+    private val _completed: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val completed = _completed.asStateFlow()
+
+    private val timer = Timer(viewModelScope, completed)
 
     val puzzles = _puzzles.asStateFlow()
     val redoQueue = _redoQueue.asStateFlow()
     val puzzle = _puzzles.map { it.lastOrNull() }
     val controlState = _controlState.asStateFlow()
-    val completed: Flow<Boolean> = puzzle.map { it?.completed() ?: false }
+
     val time = timer.duration
 
     val contradictions = puzzle.mapLatest { it?.findContradictions() ?: listOf() }
@@ -52,19 +55,15 @@ class SudokuViewModel @Inject constructor(
             loadPuzzle(it)
         } ?: run { getNewPuzzle(numberOfClues) }
 
-        //
-        viewModelScope.launch {
-            completed.collect {
-                when (it) {
-                    true -> timer.stopTimer()
-                    false -> timer.startTimer()
-                }
-            }
-        }
+        controlTimerWithCompletionState()
     }
 
+    /**
+     * Start a coroutine which collected on completion state and stops/starts the timer based on it
+     */
     fun controlTimerWithCompletionState() {
         viewModelScope.launch {
+            puzzle.collectLatest { _completed.emit(it?.completed() ?: false) }
             completed.collect {
                 when (it) {
                     true -> timer.stopTimer()
@@ -81,14 +80,17 @@ class SudokuViewModel @Inject constructor(
     fun setFromPuzzleSave(s: PuzzleSave) {
         puzzleSave = s
         timer.setTime(s.puzzleTime)
-        timer.startTimer()
-        setNewPuzzle(
-            Sudoku(
-                clues = s.clues.toPersistentMap(),
-                entries = s.entries.toPersistentMap(),
-                guesses = s.guesses.toPersistentMap(),
+        if (setNewPuzzle(
+                Sudoku(
+                    clues = s.clues.toPersistentMap(),
+                    entries = s.entries.toPersistentMap(),
+                    guesses = s.guesses.toPersistentMap(),
+                )
             )
-        )
+        ) {
+            // If the puzzle was different to the previous one, then start the timer
+            timer.startTimer()
+        }
     }
 
     /**
@@ -117,10 +119,11 @@ class SudokuViewModel @Inject constructor(
     /**
      * Set a new puzzle
      * @param puzzle The new puzzle
+     * @return true if puzzle was set, false if not
      */
-    fun setNewPuzzle(puzzle: Sudoku) {
+    fun setNewPuzzle(puzzle: Sudoku): Boolean {
         _controlState.value = ControlState()
-        setPuzzle(puzzle)
+        return setPuzzle(puzzle)
     }
 
     /**
@@ -184,12 +187,14 @@ class SudokuViewModel @Inject constructor(
     /**
      * Set the current puzzle and clear the redo queue
      * @param sudoku The new puzzle to use
+     * @return true if puzzle was set, false if not
      */
-    fun setPuzzle(sudoku: Sudoku) {
-        if (sudoku != _puzzles.value.lastOrNull()) {
+    fun setPuzzle(sudoku: Sudoku): Boolean {
+        return if (sudoku != _puzzles.value.lastOrNull()) {
             _puzzles.value = _puzzles.value + sudoku
             _redoQueue.value = listOf()
-        }
+            true
+        } else false
     }
 
     /**
@@ -269,6 +274,8 @@ class SudokuViewModel @Inject constructor(
      * Function to run when the activity is resumed. Restarts the timer.
      */
     fun onResume() {
-        timer.startTimer()
+        runBlocking {
+            if (!completed.first()) timer.startTimer()
+        }
     }
 }

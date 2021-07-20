@@ -72,7 +72,7 @@ class PuzzleTest {
                 9 * 9 - toRemove
             )?.first()
         })
-        val saves = runBlocking { puzzleDao.getPuzzleSaves().first() }
+        val saves = runBlocking { puzzleDao.getIncompletePuzzleSaves().first() }
         assertEquals(listOf(PuzzleSave(
             id = puzzle.id,
             clues = puzzle.clues.take(9 * 9 - toRemove).map { (a, b, c) -> Pair(a, b) to c.toInt() }
@@ -102,7 +102,7 @@ class PuzzleTest {
             assertEquals(1, puzzleDao.insertPuzzleSave(puzzle.copy(id = 1)))
         }
         assertEquals(runBlocking {
-            puzzleDao.getPuzzleSaves().first().size
+            puzzleDao.getIncompletePuzzleSaves().first().size
         }, 2)
         val puzzle2 = PuzzleSave(
             id = 1,

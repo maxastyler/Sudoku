@@ -1,4 +1,4 @@
-package com.maxtyler.sudoku.ui
+package com.maxtyler.sudoku.ui.utils
 
 import com.maxtyler.sudoku.model.Sudoku
 

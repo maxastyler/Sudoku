@@ -17,6 +17,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.maxtyler.sudoku.database.PuzzleSave
 import com.maxtyler.sudoku.model.Sudoku
+import com.maxtyler.sudoku.ui.utils.ControlState
+import com.maxtyler.sudoku.ui.utils.stringFormat
 import com.maxtyler.sudoku.viewmodels.MenuViewModel
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.launch
@@ -143,11 +145,11 @@ fun SaveView(puzzleSave: PuzzleSave, onClicked: () -> Unit = {}, onDelete: () ->
                     controlsDisabled = true
                 )
             }
+            Text("Time: ${puzzleSave.puzzleTime.stringFormat()}")
             Button(onClick = onDelete) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = "Delete this puzzle")
 
             }
         }
     }
-//        SudokuView(sudoku, contradictions = listOf(), controlState = ControlState())
 }

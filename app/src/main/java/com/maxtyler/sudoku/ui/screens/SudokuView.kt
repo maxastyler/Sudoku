@@ -12,8 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.ui.BoardView
-import com.maxtyler.sudoku.ui.ControlState
 import com.maxtyler.sudoku.ui.screens.SelectionView
+import com.maxtyler.sudoku.ui.utils.ControlState
+import com.maxtyler.sudoku.ui.utils.stringFormat
 import java.time.Duration
 
 @ExperimentalFoundationApi
@@ -35,7 +36,6 @@ fun SudokuView(
     time: Duration? = null,
 ) {
     Column(modifier = Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Time: ${time?.toMinutes()}:${time?.seconds?.mod(60)}")
         BoardView(
             sudoku = sudoku,
             contradictions = contradictions,

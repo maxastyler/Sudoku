@@ -39,6 +39,7 @@ fun SudokuScreen(
     Scaffold(topBar = {
         SudokuTopBar(
             playingGame = !completed,
+            time = time,
             onClearAllValues = {
                 sudokuViewModel.clearAllValues()
                 it()

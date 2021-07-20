@@ -20,17 +20,6 @@ class MenuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepo
     val saves = puzzleRepository.saves
     val puzzleCount = puzzleRepository.generatedPuzzleCount
 
-    init {
-        viewModelScope.launch {
-            puzzleRepository.generatedPuzzleCount.collectLatest {
-                Log.d(
-                    "GAMES",
-                    "The number of generated saves: ${it}"
-                )
-            }
-        }
-    }
-
     /**
      * Delete the given puzzle save from the database
      * @param puzzleSave The puzzle to delete

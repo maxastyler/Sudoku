@@ -24,7 +24,7 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     val saves: Flow<List<PuzzleSave>>
-        get() = puzzleDao.getPuzzleSaves()
+        get() = puzzleDao.getPuzzleSavesByCompletion(0)
 
     val generatedPuzzleCount: Flow<Int>
         get() = puzzleDao.generatedPuzzleCount()

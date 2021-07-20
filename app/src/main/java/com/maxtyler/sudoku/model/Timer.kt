@@ -1,11 +1,12 @@
 package com.maxtyler.sudoku.model
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import android.util.Log
+import com.maxtyler.sudoku.ui.utils.stringFormat
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -13,10 +14,12 @@ import java.time.LocalDateTime
  * A timer for the game. Subscribe to the duration flow to get time updates every second
  * Can be paused and restarted
  * @param parentScope The scope to run the timer updates in
+ * @param completionFlow A flow telling whether the puzzle is completed or not
  * @param totalTime Initialise the timer with the given duration
  */
 class Timer(
     private val parentScope: CoroutineScope,
+    private val completionFlow: StateFlow<Boolean>,
     private var totalTime: Duration = Duration.ZERO
 ) {
 
@@ -33,7 +36,9 @@ class Timer(
         } ?: Duration.ZERO)
 
     init {
-        startTimer()
+        parentScope.launch {
+            completionFlow.collect { if (it) stopTimer() else startTimer() }
+        }
     }
 
     /**
@@ -52,13 +57,15 @@ class Timer(
      * Start the duration emission job
      */
     fun startTimer() {
-        if (startTime == null) startTime = LocalDateTime.now()
-        _duration.value = time
-        timerJob?.cancel()
-        timerJob = parentScope.launch {
-            while (true) {
-                _duration.emit(time)
-                delay(1000)
+        if (!completionFlow.value) {
+            if (startTime == null) startTime = LocalDateTime.now()
+            _duration.value = time
+            timerJob?.cancel()
+            timerJob = parentScope.launch {
+                while (true) {
+                    _duration.emit(time)
+                    delay(1000)
+                }
             }
         }
     }
@@ -68,10 +75,10 @@ class Timer(
      */
     fun stopTimer() {
         timerJob?.cancel()
-        startTime?.let {
-            totalTime += Duration.between(it, LocalDateTime.now())
+        if (startTime != null) {
+            totalTime = time
+            startTime = null
+            _duration.value = time
         }
-        _duration.value = time
-        startTime = null
     }
 }

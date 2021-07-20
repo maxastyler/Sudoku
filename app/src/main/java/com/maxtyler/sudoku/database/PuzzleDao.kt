@@ -26,11 +26,14 @@ interface PuzzleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPuzzleSave(puzzleSave: PuzzleSave): Long
 
-    @Query("SELECT * from puzzlesave where completed=0 ORDER BY dateWritten DESC")
-    fun getPuzzleSaves(): Flow<List<PuzzleSave>>
+    @Query("SELECT * from puzzlesave where completed=:completion ORDER BY dateWritten DESC")
+    fun getPuzzleSavesByCompletion(completion: Int): Flow<List<PuzzleSave>>
 
     @Query("SELECT * from puzzlesave where id=:id LIMIT 1")
     fun getPuzzleSave(id: Long): Flow<PuzzleSave?>
+
+    @Query("SELECT * from puzzlesave ORDER BY dateWritten DESC")
+    fun getPuzzleSaves(): Flow<List<PuzzleSave>>
 
     @Delete
     suspend fun deletePuzzleSave(vararg puzzle: PuzzleSave): Int

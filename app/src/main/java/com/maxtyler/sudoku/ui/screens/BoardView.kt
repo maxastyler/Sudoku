@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.toSize
 import com.maxtyler.sudoku.model.Sudoku
+import com.maxtyler.sudoku.ui.utils.ControlState
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
