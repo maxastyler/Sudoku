@@ -31,16 +31,29 @@ class MenuViewModel @Inject constructor(private val puzzleRepository: PuzzleRepo
         }
     }
 
+    /**
+     * Delete the given puzzle save from the database
+     * @param puzzleSave The puzzle to delete
+     */
     fun deletePuzzleSave(puzzleSave: PuzzleSave) {
         viewModelScope.launch(Dispatchers.IO) { puzzleRepository.deleteSave(puzzleSave) }
     }
 
+    /**
+     * Create a puzzle with the given difficulty
+     * @param difficulty The difficulty of the puzzle
+     * @return The id of the puzzle or null if it couldn't be created
+     */
     suspend fun createPuzzle(difficulty: Difficulty): Long? {
         return withContext(Dispatchers.IO) {
             puzzleRepository.createNewPuzzle(difficulty.clues)?.first()?.id
         }
     }
 
+    /**
+     * The different difficulty settings
+     * @param clues The number of clues this difficulty setting has in the puzzle
+     */
     enum class Difficulty(val clues: Int) {
         Easy(50), Medium(40), Hard(30)
     }

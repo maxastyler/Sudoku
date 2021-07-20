@@ -35,6 +35,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Composable which runs the given functions when the activitiy is paused and resumed.
+ * Uses rememberUpdatedState to take in new functions without having to recompose everything
+ * @param onPause The function to run in the ON_PAUSE lifecycle event
+ * @param onResume The function to run in the ON_RESUME lifecycle event
+ */
 @Composable
 fun RunFunctionOnPauseAndResume(onPause: () -> Unit, onResume: () -> Unit) {
     val pause by rememberUpdatedState(newValue = onPause)

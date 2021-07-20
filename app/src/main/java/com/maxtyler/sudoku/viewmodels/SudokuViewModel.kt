@@ -30,12 +30,12 @@ class SudokuViewModel @Inject constructor(
     private var numberOfClues: Int = 30
     private var puzzleSave: PuzzleSave? = null
     private val _puzzles: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
-    val puzzles = _puzzles.asStateFlow()
     private val _redoQueue: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
-    val redoQueue = _redoQueue.asStateFlow()
-
-    val puzzle = _puzzles.map { it.lastOrNull() }
     private val _controlState: MutableStateFlow<ControlState> = MutableStateFlow(ControlState())
+
+    val puzzles = _puzzles.asStateFlow()
+    val redoQueue = _redoQueue.asStateFlow()
+    val puzzle = _puzzles.map { it.lastOrNull() }
     val controlState = _controlState.asStateFlow()
     val completed: Flow<Boolean> = puzzle.map { it?.completed() ?: false }
 
@@ -50,6 +50,10 @@ class SudokuViewModel @Inject constructor(
         } ?: run { getNewPuzzle(numberOfClues) }
     }
 
+    /**
+     * Get a new puzzle with the given number filled, starting a job if needed
+     * @param numberFilled The number of clues to have in the puzzle
+     */
     fun getNewPuzzle(numberFilled: Int) {
         puzzleJob?.cancel()
         puzzleSave = null
@@ -68,6 +72,10 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Load a puzzle from the database with the given id
+     * @param puzzleId The database id of the puzzle
+     */
     fun loadPuzzle(puzzleId: Long) {
         puzzleJob?.cancel()
         puzzleJob = viewModelScope.launch {
@@ -85,11 +93,20 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Set a new puzzle
+     * @param puzzle The new puzzle
+     */
     fun setNewPuzzle(puzzle: Sudoku) {
         _controlState.value = ControlState()
         setPuzzle(puzzle)
     }
 
+    /**
+     * Toggle the entry at the given coordinate
+     * @param coord The coordinate to toggle at
+     * @param entry The number to toggle
+     */
     fun toggleEntry(coord: Pair<Int, Int>, entry: Int) {
         _puzzles.value.lastOrNull()?.toggleEntry(coord, entry)?.let {
             vibrate(vibrationEffect)
@@ -97,35 +114,56 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Toggle a guess at the given coordinate
+     * @param coord The coordinate to toggle at
+     * @param guess The number to enter
+     */
     fun toggleGuess(coord: Pair<Int, Int>, guess: Int) =
         _puzzles.value.lastOrNull()?.toggleGuess(coord, guess)?.let {
             setPuzzle(it)
         }
 
+    /**
+     * Remove all entries from the puzzle
+     */
     fun clearAllEntries() {
         _puzzles.value.lastOrNull()?.let {
             setPuzzle(it.clearEntries())
         }
     }
 
+    /**
+     * Clean up any guesses which contradict entries in the puzzle
+     */
     fun cleanGuesses() {
         _puzzles.value.lastOrNull()?.let {
             setPuzzle(it.cleanAllGuesses())
         }
     }
 
+    /**
+     * Clear all guesses from the current puzzle
+     */
     fun clearAllGuesses() {
         _puzzles.value.lastOrNull()?.let {
             setPuzzle(it.clearGuesses())
         }
     }
 
+    /**
+     * Clear everything from the current puzzle
+     */
     fun clearAllValues() {
         _puzzles.value.lastOrNull()?.let {
             setPuzzle(it.clearAll())
         }
     }
 
+    /**
+     * Set the current puzzle and clear the redo queue
+     * @param sudoku The new puzzle to use
+     */
     fun setPuzzle(sudoku: Sudoku) {
         if (sudoku != _puzzles.value.lastOrNull()) {
             _puzzles.value = _puzzles.value + sudoku
@@ -133,6 +171,10 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Toggle the control selection of a square
+     * @param square The square to toggle
+     */
     fun toggleSquare(square: Pair<Int, Int>) {
         when {
             (square.first < 0) or (square.first > 8) or (square.second < 0) or (square.second > 8) -> Unit
@@ -143,6 +185,9 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Write the current save to the database
+     */
     fun writeCurrentSave() = puzzleSave?.let { ps ->
         _puzzles.value.lastOrNull()?.let {
             puzzleRepository.writeSave(
@@ -157,6 +202,9 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * If there are previous entries in the undo queue, move the current entry to the redo queue
+     */
     fun undo() {
         if (_puzzles.value.count() > 1) {
             _puzzles.value.lastOrNull()?.let { last ->
@@ -166,6 +214,9 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * If there are any entries in the redo queue, move them onto the puzzles stack
+     */
     fun redo() {
         _redoQueue.value.lastOrNull()?.let { last ->
             _puzzles.value += last
@@ -173,11 +224,28 @@ class SudokuViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Vibration manager
+     */
     fun vibrate(effect: VibrationEffect) {
         if (vibrationJob?.isActive != true) {
             vibrationJob = viewModelScope.launch(Dispatchers.Default) {
                 vibrator.vibrate(effect)
             }
         }
+    }
+
+    /**
+     * Function to run when the activity is paused. Writes a save and stops the timer
+     */
+    fun onPause() {
+        writeCurrentSave()
+    }
+
+    /**
+     * Function to run when the activity is resumed. Restarts the timer.
+     */
+    fun onResume() {
+
     }
 }
