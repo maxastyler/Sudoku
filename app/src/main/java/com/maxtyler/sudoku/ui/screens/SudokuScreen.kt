@@ -70,7 +70,7 @@ fun SudokuScreen(
         )
         if (completed) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Card() {
+                Card {
                     Column(
                         modifier = Modifier.padding(10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
