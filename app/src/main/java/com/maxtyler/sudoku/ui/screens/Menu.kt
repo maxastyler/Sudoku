@@ -61,8 +61,9 @@ fun Menu(
                                 }
                             }, enabled = (count > 0)
                         ) {
-                            if (count > 0) Text("Difficulty: ${difficulty.name}")
-                            else Text("Waiting for game to generate puzzles...")
+                            if (count > 0) {
+                                Text("Difficulty: ${difficulty.name}")
+                            } else Text("Waiting for game to generate puzzles...")
                         }
                     }
                 }

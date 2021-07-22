@@ -1,7 +1,5 @@
 package com.maxtyler.sudoku.model
 
-import android.util.Log
-
 data class Solver(val board: Map<Pair<Int, Int>, String>) {
     constructor(sudoku: Sudoku) : this(board = (0..8).flatMap { row ->
         (0..8).map { col ->
@@ -31,7 +29,6 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
             val tempSolution = solution.toMutableMap()
             var removed = 0
             for (coord in solution.filterValues { it.length == 1 }.keys.shuffled()) {
-                Log.d("GAMES", "Removed: ${removed}")
                 if (isUnique(tempSolution + (coord to unset))) {
                     clues.add(Triple(coord.first, coord.second, tempSolution[coord]!!))
                     tempSolution[coord] = unset
