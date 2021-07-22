@@ -1,6 +1,5 @@
 package com.maxtyler.sudoku.ui
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.maxtyler.sudoku.database.PuzzleSave
+import com.maxtyler.sudoku.model.Difficulty
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.ui.utils.ControlState
 import com.maxtyler.sudoku.ui.utils.stringFormat
@@ -31,7 +31,10 @@ fun Menu(
 ) {
     val saves by menuViewModel.saves.collectAsState(initial = listOf())
     val listState = rememberLazyListState()
-    val saveCount by menuViewModel.puzzleCount.collectAsState(0)
+    val saveCount =
+        Difficulty.values().map { it to menuViewModel.puzzleCount(it).collectAsState(initial = 0) }
+            .toMap()
+//    val saveCount by menuViewModel.puzzleCount.collectAsState(0)
     var deleteAlertState: PuzzleSave? by remember { mutableStateOf(null) }
 
     val scope = rememberCoroutineScope()
@@ -45,19 +48,20 @@ fun Menu(
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Text("Start a new game:")
-                    MenuViewModel.Difficulty.values().forEach {
+                    Difficulty.values().forEach { difficulty ->
+                        val count = saveCount[difficulty]?.value ?: 0
                         Button(
                             modifier = Modifier
                                 .padding(20.dp)
                                 .fillMaxWidth(), onClick = {
                                 scope.launch {
-                                    menuViewModel.createPuzzle(it)?.let {
-                                        navHostController.navigate("game/${it}/30")
+                                    menuViewModel.createPuzzle(difficulty)?.let {
+                                        navHostController.navigate("game/${it}/${difficulty.ordinal}")
                                     }
                                 }
-                            }, enabled = (saveCount > 0)
+                            }, enabled = (count > 0)
                         ) {
-                            if (saveCount > 0) Text("Difficulty: ${it.name}")
+                            if (count > 0) Text("Difficulty: ${difficulty.name}")
                             else Text("Waiting for game to generate puzzles...")
                         }
                     }
@@ -74,9 +78,9 @@ fun Menu(
                     LazyColumn(state = listState) {
 
                         items(saves) {
-                            Box(modifier = Modifier.clickable { Log.d("GAMES", "Hi") }) {
+                            Box() {
                                 SaveView(it, onClicked = {
-                                    navHostController.navigate("game/${it.id}/30")
+                                    navHostController.navigate("game/${it.id}/0")
                                 }, onDelete = { deleteAlertState = it })
                             }
                         }

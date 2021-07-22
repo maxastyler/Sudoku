@@ -14,8 +14,8 @@ interface PuzzleDao {
     @Query("SELECT * from GeneratedPuzzle where id = :id LIMIT 1")
     fun getGeneratedPuzzle(id: Long): Flow<GeneratedPuzzle?>
 
-    @Query("SELECT * from GeneratedPuzzle ORDER BY id ASC LIMIT 1")
-    fun getFirstGeneratedPuzzleFlow(): Flow<GeneratedPuzzle?>
+    @Query("SELECT * from GeneratedPuzzle WHERE minimumClues=:minimumClues ORDER BY id ASC LIMIT 1")
+    fun getFirstGeneratedPuzzleFlow(minimumClues: Int): Flow<GeneratedPuzzle?>
 
     @Query("SELECT * from GeneratedPuzzle")
     fun getGeneratedPuzzles(): Flow<List<GeneratedPuzzle>>
@@ -38,8 +38,8 @@ interface PuzzleDao {
     @Delete
     suspend fun deletePuzzleSave(vararg puzzle: PuzzleSave): Int
 
-    @Query("SELECT COUNT(id) FROM generatedpuzzle")
-    fun generatedPuzzleCount(): Flow<Int>
+    @Query("SELECT COUNT(id) FROM generatedpuzzle WHERE minimumClues=:minimumClues")
+    fun generatedPuzzleCount(minimumClues: Int): Flow<Int>
 
     /**
      * Turn a generated puzzle into an empty puzzle save with the correct number of clues, failing

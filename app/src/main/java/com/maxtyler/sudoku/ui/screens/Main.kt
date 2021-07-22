@@ -27,9 +27,9 @@ fun Main() {
             })
         }
         composable(
-            "game/{gameId}/{numberOfClues}",
+            "game/{gameId}/{difficulty}",
             arguments = listOf(navArgument("gameId") { type = NavType.LongType },
-                navArgument("numberOfClues") { type = NavType.IntType })
+                navArgument("difficulty") { type = NavType.IntType })
         ) {
             val vm = hiltViewModel<SudokuViewModel>()
             SudokuScreen(

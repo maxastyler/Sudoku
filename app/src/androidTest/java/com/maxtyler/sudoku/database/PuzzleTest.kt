@@ -122,7 +122,9 @@ class PuzzleTest {
     fun testCountingGeneratedPuzzles() {
         val cluesToRemove = 3
         val thingsToAdd = 4
-        assertEquals(0, runBlocking { puzzleDao.generatedPuzzleCount().first() })
+        assertEquals(
+            0,
+            runBlocking { puzzleDao.generatedPuzzleCount(9 * 9 - cluesToRemove).first() })
         runBlocking {
             (1..thingsToAdd).forEach {
                 puzzleDao.insertGeneratedPuzzle(
@@ -135,24 +137,29 @@ class PuzzleTest {
                 )
             }
         }
-        assertEquals(thingsToAdd, runBlocking { puzzleDao.generatedPuzzleCount().first() })
+        assertEquals(
+            thingsToAdd,
+            runBlocking { puzzleDao.generatedPuzzleCount(9 * 9 - cluesToRemove).first() })
     }
 
     @Test
     fun testGetFirstGeneratedPuzzle() {
-        assertNull(runBlocking { puzzleDao.getFirstGeneratedPuzzleFlow().first() })
+        val cluesToRemove = 3
+        assertNull(runBlocking {
+            puzzleDao.getFirstGeneratedPuzzleFlow(minimumClues = 9 * 9 - cluesToRemove).first()
+        })
         runBlocking {
             (1..4).forEach {
                 puzzleDao.insertGeneratedPuzzle(
                     GeneratedPuzzle(
                         clues = Solver(Sudoku()).findMinSolutions(
-                            3
+                            cluesToRemove
                         )!!,
-                        minimumClues = 9 * 9 - 3
+                        minimumClues = 9 * 9 - cluesToRemove
                     )
                 )
             }
         }
-        assertNotNull(runBlocking { puzzleDao.getFirstGeneratedPuzzleFlow() })
+        assertNotNull(runBlocking { puzzleDao.getFirstGeneratedPuzzleFlow(9 * 9 - cluesToRemove) })
     }
 }

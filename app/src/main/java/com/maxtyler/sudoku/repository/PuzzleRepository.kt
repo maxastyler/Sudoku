@@ -3,6 +3,7 @@ package com.maxtyler.sudoku.repository
 import com.maxtyler.sudoku.database.GeneratedPuzzle
 import com.maxtyler.sudoku.database.PuzzleDao
 import com.maxtyler.sudoku.database.PuzzleSave
+import com.maxtyler.sudoku.model.Difficulty
 import com.maxtyler.sudoku.model.Solver
 import com.maxtyler.sudoku.model.Sudoku
 import kotlinx.collections.immutable.toPersistentMap
@@ -19,33 +20,36 @@ import javax.inject.Singleton
 @Singleton
 class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
     private val numberToGenerate: Int = 4
-    private val minSolutions: Int = 30
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
     val saves: Flow<List<PuzzleSave>>
         get() = puzzleDao.getPuzzleSavesByCompletion(0)
 
-    val generatedPuzzleCount: Flow<Int>
-        get() = puzzleDao.generatedPuzzleCount()
-
     init {
-        scope.launch {
-            puzzleDao.generatedPuzzleCount().flowOn(Dispatchers.IO).collectLatest {
-                if (it < numberToGenerate) {
-                    val puzzle = withContext(Dispatchers.Default) {
-                        generatePuzzle(minSolutions)
-                    }
-                    puzzleDao.insertGeneratedPuzzle(
-                        GeneratedPuzzle(
-                            clues = puzzle,
-                            minimumClues = minSolutions
-                        )
-                    )
+        Difficulty.values().forEach {
+            launchGenerationForDifficulty(it)
+        }
+    }
+
+    fun launchGenerationForDifficulty(difficulty: Difficulty) = scope.launch {
+        puzzleDao.generatedPuzzleCount(difficulty.clues).flowOn(Dispatchers.IO).collectLatest {
+            if (it < numberToGenerate) {
+                val puzzle = withContext(Dispatchers.Default) {
+                    generatePuzzle(difficulty.clues)
                 }
+                puzzleDao.insertGeneratedPuzzle(
+                    GeneratedPuzzle(
+                        clues = puzzle,
+                        minimumClues = difficulty.clues
+                    )
+                )
             }
         }
     }
+
+    fun generatedPuzzleCount(difficulty: Difficulty): Flow<Int> =
+        puzzleDao.generatedPuzzleCount(difficulty.clues)
 
     private fun puzzleSaveToSudoku(puzzleSave: PuzzleSave): Sudoku =
         Sudoku(
@@ -54,9 +58,9 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
             guesses = puzzleSave.guesses.toPersistentMap()
         )
 
-    suspend fun createNewPuzzle(clueNumber: Int): Flow<PuzzleSave>? {
-        val puzzle = puzzleDao.getFirstGeneratedPuzzleFlow().filterNotNull().first()
-        return puzzleDao.transformGeneratedPuzzleToSave(puzzle, clueNumber = clueNumber)
+    suspend fun createNewPuzzle(difficulty: Difficulty): Flow<PuzzleSave>? {
+        val puzzle = puzzleDao.getFirstGeneratedPuzzleFlow(difficulty.clues).filterNotNull().first()
+        return puzzleDao.transformGeneratedPuzzleToSave(puzzle, clueNumber = difficulty.clues)
             ?.filterNotNull()
     }
 

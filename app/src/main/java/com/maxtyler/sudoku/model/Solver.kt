@@ -1,5 +1,7 @@
 package com.maxtyler.sudoku.model
 
+import android.util.Log
+
 data class Solver(val board: Map<Pair<Int, Int>, String>) {
     constructor(sudoku: Sudoku) : this(board = (0..8).flatMap { row ->
         (0..8).map { col ->
@@ -28,26 +30,21 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
         return solve()?.let { solution ->
             val tempSolution = solution.toMutableMap()
             var removed = 0
-            while (removed < toRemove) {
-                when (val x =
-                    tempSolution.filterValues { it.length == 1 }.keys.shuffled().asSequence()
-                        .mapNotNull { coord ->
-                            if (countSolutions(tempSolution + (coord to unset)) == 1) coord
-                            else null
-                        }.firstOrNull()) {
-                    null -> {
-                        break
-                    }
-                    else -> {
-                        clues.add(Triple(x.first, x.second, tempSolution[x]!!))
-                        tempSolution[x] = unset
-                    }
+            for (coord in solution.filterValues { it.length == 1 }.keys.shuffled()) {
+                Log.d("GAMES", "Removed: ${removed}")
+                if (isUnique(tempSolution + (coord to unset))) {
+                    clues.add(Triple(coord.first, coord.second, tempSolution[coord]!!))
+                    tempSolution[coord] = unset
+                    removed += 1
+                    if (removed >= toRemove) break
                 }
-                removed += 1
             }
-            tempSolution.filterValues { v -> v.length == 1 }
-                .forEach { (k, v) -> clues.add(Triple(k.first, k.second, v)) }
-            clues.reversed()
+            if (removed < toRemove) null
+            else {
+                tempSolution.filterValues { v -> v.length == 1 }
+                    .forEach { (k, v) -> clues.add(Triple(k.first, k.second, v)) }
+                clues.reversed()
+            }
         }
     }
 
@@ -104,6 +101,32 @@ data class Solver(val board: Map<Pair<Int, Int>, String>) {
                 }
             }
             return null
+        }
+
+        fun isUnique(values: Map<Pair<Int, Int>, String>): Boolean =
+            isUniqueInner(values.toMutableMap())
+
+        private fun isUniqueInner(values: MutableMap<Pair<Int, Int>, String>?): Boolean {
+            if (values == null) return false
+            when (val mini = values.toList().filter { (_, v) -> v.length > 1 }
+                .minByOrNull { (_, v) -> v.length }) {
+                null -> return true // the filter returned no elements, meaning all elements have been placed
+                else -> {
+                    var solCount = 0
+                    for (c in mini.second) {
+                        if (isUniqueInner(
+                                assign(
+                                    values.toMutableMap(),
+                                    mini.first,
+                                    c
+                                )
+                            )
+                        ) solCount += 1
+                        if (solCount > 1) break
+                    }
+                    return (solCount == 1)
+                }
+            }
         }
 
         fun countSolutions(values: Map<Pair<Int, Int>, String>): Int =

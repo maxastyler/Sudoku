@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.maxtyler.sudoku.database.PuzzleSave
+import com.maxtyler.sudoku.model.Difficulty
 import com.maxtyler.sudoku.model.Sudoku
 import com.maxtyler.sudoku.model.Timer
 import com.maxtyler.sudoku.repository.PuzzleRepository
@@ -28,7 +29,7 @@ class SudokuViewModel @Inject constructor(
     ViewModel() {
     private var vibrationJob: Job? = null
     private var vibrationEffect = VibrationEffect.createOneShot(100L, 200)
-    private var numberOfClues: Int = 30
+    private lateinit var difficulty: Difficulty
     private var puzzleSave: PuzzleSave? = null
     private val _puzzles: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
     private val _redoQueue: MutableStateFlow<List<Sudoku>> = MutableStateFlow(listOf())
@@ -50,10 +51,11 @@ class SudokuViewModel @Inject constructor(
     private var puzzleJob: Job? = null
 
     init {
-        savedStateHandle.get<Int>("numberOfClues")?.let { numberOfClues = it }
+        difficulty = savedStateHandle.get<Int>("difficulty")?.let { Difficulty.values()[it] }
+            ?: Difficulty.Medium
         savedStateHandle.get<Long>("gameId")?.let {
             loadPuzzle(it)
-        } ?: run { getNewPuzzle(numberOfClues) }
+        } ?: run { getNewPuzzle(difficulty) }
 
         controlTimerWithCompletionState()
     }
@@ -97,10 +99,10 @@ class SudokuViewModel @Inject constructor(
      * Get a new puzzle with the given number filled, starting a job if needed
      * @param numberFilled The number of clues to have in the puzzle
      */
-    fun getNewPuzzle(numberFilled: Int) {
+    fun getNewPuzzle(difficulty: Difficulty) {
         puzzleJob?.cancel()
         puzzleJob = viewModelScope.launch {
-            puzzleRepository.createNewPuzzle(numberFilled)?.collectLatest { setFromPuzzleSave(it) }
+            puzzleRepository.createNewPuzzle(difficulty)?.collectLatest { setFromPuzzleSave(it) }
         }
     }
 
