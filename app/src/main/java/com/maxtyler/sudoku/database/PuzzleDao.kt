@@ -9,7 +9,7 @@ import java.util.*
 @Dao
 interface PuzzleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGeneratedPuzzle(puzzle: GeneratedPuzzle)
+    suspend fun insertGeneratedPuzzle(vararg puzzle: GeneratedPuzzle)
 
     @Query("SELECT * from GeneratedPuzzle where id = :id LIMIT 1")
     fun getGeneratedPuzzle(id: Long): Flow<GeneratedPuzzle?>

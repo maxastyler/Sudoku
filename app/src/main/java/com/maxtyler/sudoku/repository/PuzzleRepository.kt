@@ -19,7 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
-    private val numberToGenerate: Int = 4
+    private val numberToGenerate: Int = 8
+    private val numberToShuffle: Int = 4
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -38,12 +39,8 @@ class PuzzleRepository @Inject constructor(private val puzzleDao: PuzzleDao) {
                 val puzzle = withContext(Dispatchers.Default) {
                     generatePuzzle(difficulty.clues)
                 }
-                puzzleDao.insertGeneratedPuzzle(
-                    GeneratedPuzzle(
-                        clues = puzzle,
-                        minimumClues = difficulty.clues
-                    )
-                )
+                val p = GeneratedPuzzle(clues = puzzle, minimumClues = difficulty.clues)
+                puzzleDao.insertGeneratedPuzzle(*(Array(numberToShuffle) { p.shuffle() } + p))
             }
         }
     }
