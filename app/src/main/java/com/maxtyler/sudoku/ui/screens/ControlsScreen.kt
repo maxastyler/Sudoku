@@ -30,6 +30,8 @@ fun ControlsScreen() {
             You can undo and redo with the undo and redo buttons :^O
             
             Use the "clean guesses" button to clean up guesses when you've confirmed a number.
+            
+            The 3 little dots will let you clear guesses/entries/everything. Useful if you've made a big old blunder.
         """.trimIndent()
                 )
             }
